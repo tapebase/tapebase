@@ -16,6 +16,7 @@
     "test:submissions": "node --test scripts/catalog-submission.test.mts",
     "test:moderation": "node --test scripts/submission-moderation.test.mts",
     "test:concerts": "node --test scripts/ticketmaster.test.mts",
+    "test:youtube": "node --test scripts/youtube.test.mts",
     "check:catalog": "node scripts/catalog-smoke.mts"
   },
   "dependencies": {

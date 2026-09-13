@@ -470,3 +470,21 @@ danych uwierzytelniania.
 Publiczna funkcja rankingu aktywności z ograniczonym okresem i liczbą wyników.
 Liczy wyłącznie skutecznie zaimportowane albumy, widoczne komentarze główne jako
 recenzje oraz bieżące oceny albumów. Odpowiedzi w dyskusjach nie zwiększają wyniku.
+
+## youtube_channels, youtube_videos i artist_videos
+
+`youtube_channels` przechowuje publiczne metadane kanału, typ wydawcy i stan
+zweryfikowania. `artist_youtube_channels` wiąże artystę z wieloma kanałami oraz
+zapisuje sposób i dowody dopasowania. Kanał znaleziony po samej nazwie pozostaje
+kandydatem do decyzji administratora.
+
+`youtube_videos` przechowuje jeden rekord dla globalnie unikalnego YouTube Video ID.
+Tabela `artist_videos` pozwala przypisać ten sam klip do kilku wykonawców, wskazać
+pasujący utwór oraz zapisać wynik automatycznej lub ręcznej moderacji. Prywatne
+tabele nie są publicznie odczytywalne; funkcja `artist_videos_for_profile` zwraca
+maksymalnie pięć zatwierdzonych, możliwych do osadzenia filmów z metadanymi
+odświeżonymi w ciągu ostatnich 30 dni.
+
+`artist_youtube_sync` jest kolejką pełnych profili katalogowych. Tabele
+`youtube_sync_runs` i `youtube_sync_daily_usage` zapisują historię oraz atomowo
+egzekwują wewnętrzny limit 50 wyszukiwań dziennie.

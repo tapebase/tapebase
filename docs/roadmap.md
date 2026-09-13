@@ -135,3 +135,16 @@ Instrukcja: [spotify-import.md](spotify-import.md).
 * [ ] Konfiguracja harmonogramu po wyborze hostingu produkcyjnego
 * [ ] Kolejni oficjalni partnerzy biletowi
 * [ ] Zgłoszenia koncertów przez społeczność (odłożone)
+
+---
+
+## PHASE 9 - Teledyski YouTube
+
+* [x] Znormalizowany model kanałów, filmów i powiązań wielu artystów
+* [x] Oszczędna kolejka YouTube Data API z dziennym limitem wyszukiwań
+* [x] Automatyczne filtry oraz ręczna moderacja kanałów i filmów
+* [x] Ręczne dodanie jednoznacznego Channel ID lub Video ID przez administratora
+* [x] Pięć najpopularniejszych teledysków na profilu artysty
+* [x] Odtwarzanie przez oficjalny YouTube IFrame Player API po kliknięciu
+* [x] Zabezpieczony endpoint do okresowej synchronizacji
+* [ ] Konfiguracja klucza API i harmonogramu na hostingu produkcyjnym

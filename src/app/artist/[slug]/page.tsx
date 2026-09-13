@@ -11,6 +11,8 @@ import { getArtistConcerts } from "@/lib/concerts";
 import { countryLabel } from "@/lib/countries";
 import { ArtistBiographyForm } from "@/components/artist-biography-form";
 import { createClient } from "@/lib/supabase/server";
+import { getArtistVideos } from "@/lib/artist-videos";
+import { ArtistVideos } from "@/components/artist-videos";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 const birthDateFormat = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -50,11 +52,12 @@ export default async function ArtistPage({ params, searchParams }: Props) {
   const search = await searchParams;
   const albumPage = pageNumber(search.albums), trackPage = pageNumber(search.tracks);
   const viewer = await getViewer();
-  const [albums, tracks, community, concerts] = await Promise.all([
+  const [albums, tracks, community, concerts, videos] = await Promise.all([
     artistAlbums(artist.id, albumPage),
     artistTracks(artist.id, trackPage),
     getArtistCommunity(artist.id, viewer),
     getArtistConcerts(artist.id),
+    getArtistVideos(artist.id),
   ]);
   let pendingBiography: { content: string } | null = null;
   if (viewer && artist.catalog_visible) {
@@ -128,6 +131,7 @@ export default async function ArtistPage({ params, searchParams }: Props) {
         : <Empty>Brak albumów tego artysty na tej stronie katalogu.</Empty>}
       <Pagination path={artistPath(artist)} page={albumPage} count={albums.count} pageKey="albums" other={{ tracks: String(trackPage) }} />
     </section>
+    <ArtistVideos videos={videos} />
     <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <h2 className="mb-3 text-2xl font-black">Utwory z udziałem</h2>
       <p className="mb-6 text-sm text-zinc-500">Wykonawcy według Spotify. Lista obejmuje także własne utwory artysty.</p>

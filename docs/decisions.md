@@ -228,3 +228,20 @@
   które zostały później zastąpione lepszą wersją.
 - Administrator może usunąć opublikowaną biografię. Tekst i autor znikają z profilu,
   a prywatny rekord zgłoszenia zachowuje status `removed` dla historii moderacji.
+
+## Teledyski YouTube (2026-09-13)
+
+- YouTube Data API v3 działa wyłącznie na backendzie. TAPEBASE zapisuje ID i
+  metadane, ale nie pobiera ani nie hostuje plików wideo.
+- Wyszukiwanie działa w trwałej kolejce po imporcie pełnego artysty, nigdy podczas
+  wejścia użytkownika na profil.
+- Kanał z zaakceptowanego QID Wikidata i właściwości P2397 jest zaufany. Kanał
+  znaleziony tylko po nazwie wymaga decyzji administratora.
+- Automatyczna publikacja wymaga zweryfikowanego kanału, dopasowanego utworu i braku
+  sygnałów audio, lyric video, koncertu, wywiadu, reakcji lub materiału fanowskiego.
+- Liczba wyświetleń ustala kolejność wyłącznie po zatwierdzeniu filmu; nie jest
+  dowodem poprawnego dopasowania.
+- Profil pokazuje najwyżej pięć klipów, a oficjalny IFrame Player API ładuje się
+  dopiero po kliknięciu miniatury.
+- Metadane są odświeżane okresowo i nie są publicznie pokazywane po 30 dniach bez
+  ponownego sprawdzenia.
