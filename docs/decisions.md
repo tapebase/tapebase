@@ -219,7 +219,7 @@
 
 - Zalogowany użytkownik może zaproponować biografię wyłącznie dla pełnego profilu
   katalogowego. Propozycja nie zmienia publicznego profilu przed moderacją.
-- Administrator akceptuje albo odrzuca tekst w prywatnej kolejce „Dane artystów”.
+- Administrator akceptuje albo odrzuca tekst w osobnej, prywatnej zakładce „Biografie”.
   Odrzucenie wymaga powodu, a każda decyzja pozostaje zapisana przy zgłoszeniu.
 - Po akceptacji profil pokazuje nick autora pod biografią. Późniejsza zmiana nazwy
   użytkownika jest od razu widoczna, ponieważ zapisujemy jego identyfikator, a nie

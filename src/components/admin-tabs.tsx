@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-type AdminSection = "stats" | "submissions" | "import" | "artists" | "concerts" | "comments" | "users" | "feedback";
+type AdminSection = "stats" | "submissions" | "import" | "artists" | "biographies" | "concerts" | "comments" | "users" | "feedback";
 
 export function AdminTabs({ active }: { active: AdminSection }) {
   const item = (selected: boolean) => `rounded-xl px-5 py-3 text-sm font-bold transition ${
@@ -21,6 +21,9 @@ export function AdminTabs({ active }: { active: AdminSection }) {
     </Link>
     <Link href="/admin/artysci" aria-current={active === "artists" ? "page" : undefined} className={item(active === "artists")}>
       Dane artystów
+    </Link>
+    <Link href="/admin/biografie" aria-current={active === "biographies" ? "page" : undefined} className={item(active === "biographies")}>
+      Biografie
     </Link>
     <Link href="/admin/koncerty" aria-current={active === "concerts" ? "page" : undefined} className={item(active === "concerts")}>
       Koncerty

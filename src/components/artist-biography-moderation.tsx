@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { moderateArtistBiographyAction, type BiographyModerationState } from "@/app/admin/artysci/actions";
+import { moderateArtistBiographyAction, type BiographyModerationState } from "@/app/admin/biografie/actions";
 
 export type BiographySubmission = {
   id: number;
@@ -43,7 +43,7 @@ function BiographyCard({ submission }: { submission: BiographySubmission }) {
 }
 
 export function ArtistBiographyModeration({ submissions }: { submissions: BiographySubmission[] }) {
-  return <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+  return <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
     <h2 className="text-2xl font-black">Biografie od użytkowników</h2>
     <p className="mt-2 text-sm text-zinc-500">Akceptacja publikuje tekst na profilu artysty i podpisuje go nickiem autora.</p>
     {submissions.length
