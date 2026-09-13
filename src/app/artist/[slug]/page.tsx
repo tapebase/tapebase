@@ -84,7 +84,8 @@ export default async function ArtistPage({ params, searchParams }: Props) {
             <div className="rounded-2xl bg-[#f6f4ef] px-6 py-4"><p className="text-sm text-zinc-500">Albumy w katalogu</p><p className="text-4xl font-black">{albums.count}</p></div>
             <div className="rounded-2xl bg-[#f6f4ef] px-6 py-4"><p className="text-sm text-zinc-500">Utwory z udziałem</p><p className="text-4xl font-black">{tracks.count}</p></div>
           </div>
-          {(artist.birth_date || artist.birth_place) && <dl className="mt-6 grid gap-4 rounded-2xl border border-zinc-200 p-5 text-sm sm:grid-cols-3">
+          {(artist.real_name || artist.birth_date || artist.birth_place) && <dl className="mt-6 grid gap-4 rounded-2xl border border-zinc-200 p-5 text-sm sm:grid-cols-2 xl:grid-cols-4">
+            <div><dt className="font-bold text-zinc-500">Imię i nazwisko</dt><dd className="mt-1 font-semibold">{artist.real_name ?? "—"}</dd></div>
             <div><dt className="font-bold text-zinc-500">Wiek</dt><dd className="mt-1 font-semibold">{ageLabel(age)}</dd></div>
             <div><dt className="font-bold text-zinc-500">Data urodzenia</dt><dd className="mt-1 font-semibold">{displayedBirthDate(artist.birth_date, artist.birth_date_precision)}</dd></div>
             <div><dt className="font-bold text-zinc-500">Miejsce urodzenia</dt><dd className="mt-1 font-semibold">{birthLocation}</dd></div>
