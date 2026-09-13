@@ -10,8 +10,7 @@ export type Artist = {
   country_code: string | null;
   catalog_visible: boolean;
   real_name: string | null; birth_date: string | null; birth_date_precision: string | null;
-  birth_place: string | null; enrichment_source: string | null;
-  enrichment_source_id: string | null; enrichment_source_url: string | null;
+  birth_place: string | null;
   enrichment_field_sources: Record<string, unknown> | null;
 };
 export type Credit = { position: number; artist: Artist | null };
@@ -31,7 +30,7 @@ export type Track = {
 export type Participation = {
   track: { id: number; title: string; album: { id: number; title: string; slug: string } | null } | null;
 };
-const artistFields = "id,name,slug,spotify_id,image_url,description,country_code,catalog_visible,real_name,birth_date,birth_date_precision,birth_place,enrichment_source,enrichment_source_id,enrichment_source_url,enrichment_field_sources";
+const artistFields = "id,name,slug,spotify_id,image_url,description,country_code,catalog_visible,real_name,birth_date,birth_date_precision,birth_place,enrichment_field_sources";
 const albumFields = `id,title,slug,spotify_id,cover_url,release_date,release_date_raw,release_date_precision,album_type,genre,description,primary_artist:artists!albums_artist_id_fkey(${artistFields}),credits:album_artists(position,artist:artists(${artistFields}))`;
 export const pageSize = 20;
 export type SearchParams = Record<string, string | string[] | undefined>;

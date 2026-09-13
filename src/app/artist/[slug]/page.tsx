@@ -91,7 +91,6 @@ export default async function ArtistPage({ params, searchParams }: Props) {
             <div><dt className="font-bold text-zinc-500">Miejsce urodzenia</dt><dd className="mt-1 font-semibold">{birthLocation}</dd></div>
           </dl>}
           {artist.description && !artist.enrichment_field_sources?.description && <p className="mt-6 max-w-3xl whitespace-pre-line text-zinc-600">{artist.description}</p>}
-          {artist.enrichment_source_url && <p className="mt-3 text-xs text-zinc-400">Dane: <a href={artist.enrichment_source_url} target="_blank" rel="noreferrer" className="underline">{artist.enrichment_source === "wikidata" ? "Wikidata" : "MusicBrainz"}</a></p>}
         </div>
       </div>
     </section>
