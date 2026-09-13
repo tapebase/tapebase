@@ -50,18 +50,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
     </section>}
     <section id="ostatnio-dodane" className="mx-auto max-w-7xl px-6 pb-16">
       <div className="min-w-0 rounded-3xl bg-white p-6 shadow-sm">
+        {artists && <div className="mb-8">
+          <h2 className="mb-4 text-2xl font-black">Artyści: {q}</h2>
+          {artists.rows.length ? <div className="grid gap-4 sm:grid-cols-2">{artists.rows.map(artist => <ArtistCard key={artist.id} artist={artist} />)}</div>
+            : <Empty>Nie znaleziono artystów pasujących do zapytania.</Empty>}
+          <Link href={`/artist?q=${encodeURIComponent(q)}`} className="mt-5 inline-block text-sm font-semibold underline">Wszyscy pasujący artyści ({artists.count})</Link>
+        </div>}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-2xl font-black">{q ? `Albumy: ${q}` : "Ostatnio dodane"}</h2>
           <Link href={`/album${q ? `?q=${encodeURIComponent(q)}` : ""}`} className="text-sm font-semibold underline">Wszystkie albumy ({albums.count})</Link>
         </div>
         {albums.rows.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{albums.rows.map(album => <AlbumCard key={album.id} album={album} />)}</div>
           : <Empty>{q ? "Nie znaleziono albumów pasujących do zapytania." : "Nie ma jeszcze albumów w katalogu."}</Empty>}
-        {artists && <div className="mt-8">
-          <h2 className="mb-4 text-2xl font-black">Artyści: {q}</h2>
-          {artists.rows.length ? <div className="grid gap-4 sm:grid-cols-2">{artists.rows.map(artist => <ArtistCard key={artist.id} artist={artist} />)}</div>
-            : <Empty>Nie znaleziono artystów pasujących do zapytania.</Empty>}
-          <Link href={`/artist?q=${encodeURIComponent(q)}`} className="mt-5 inline-block text-sm font-semibold underline">Wszyscy pasujący artyści ({artists.count})</Link>
-        </div>}
       </div>
     </section>
     {!q && <ActiveUsers users={activeUsers} />}
