@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { moderateArtistBiographyAction, type BiographyModerationState } from "@/app/admin/biografie/actions";
+import { moderateArtistBiographyAction, removeArtistBiographyAction, type BiographyModerationState } from "@/app/admin/biografie/actions";
 
 export type BiographySubmission = {
   id: number;
@@ -15,6 +15,14 @@ export type BiographySubmission = {
     enrichment_field_sources: Record<string, unknown> | null;
   } | null;
   author: { username: string } | null;
+};
+
+export type PublishedBiography = {
+  id: number;
+  name: string | null;
+  slug: string | null;
+  description: string;
+  biography_author: { username: string } | null;
 };
 
 const initialState: BiographyModerationState = {};
@@ -66,5 +74,43 @@ export function ArtistBiographyModeration({ submissions }: { submissions: Biogra
     {submissions.length
       ? <div className="mt-6 space-y-4">{submissions.map(item => <BiographyCard key={item.id} submission={item} />)}</div>
       : <p className="mt-6 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak biografii oczekujących na akceptację.</p>}
+  </section>;
+}
+
+function PublishedBiographyCard({ biography }: { biography: PublishedBiography }) {
+  const [state, action, pending] = useActionState(removeArtistBiographyAction, initialState);
+  return <article className="rounded-2xl border border-zinc-200 p-5">
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h3 className="text-xl font-black">{biography.name ?? "Nieznany artysta"}</h3>
+        <p className="mt-1 text-sm text-zinc-500">{biography.biography_author
+          ? <>Dodane przez <Link href={`/u/${encodeURIComponent(biography.biography_author.username)}`} className="font-bold hover:underline">@{biography.biography_author.username}</Link></>
+          : "Biografia redakcyjna"}</p>
+      </div>
+      {biography.slug && <Link href={`/artist/${biography.slug}`} className="text-sm font-bold underline">Otwórz profil</Link>}
+    </div>
+    <p className="mt-4 whitespace-pre-line rounded-xl bg-[#f6f4ef] p-4 text-zinc-700">{biography.description}</p>
+    <form action={action} className="mt-4" onSubmit={event => {
+      if (!window.confirm(`Usunąć biografię artysty ${biography.name ?? "bez nazwy"}?`)) event.preventDefault();
+    }}>
+      <input type="hidden" name="artistId" value={biography.id} />
+      <label className="block text-sm font-bold">Powód usunięcia
+        <input name="reason" maxLength={1000} placeholder="Opcjonalna notatka dla historii moderacji" className="mt-2 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 font-normal" />
+      </label>
+      <button disabled={pending || state.success} className="mt-3 rounded-xl bg-red-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
+        {pending ? "Usuwanie…" : state.success ? "Usunięto" : "Usuń biografię"}
+      </button>
+      {state.message && <p aria-live="polite" className={`mt-3 text-sm ${state.success ? "text-emerald-700" : "text-red-700"}`}>{state.message}</p>}
+    </form>
+  </article>;
+}
+
+export function PublishedArtistBiographies({ biographies }: { biographies: PublishedBiography[] }) {
+  return <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+    <h2 className="text-2xl font-black">Opublikowane biografie</h2>
+    <p className="mt-2 text-sm text-zinc-500">Usunięcie czyści tekst i podpis autora z publicznego profilu. Decyzja pozostaje w historii moderacji.</p>
+    {biographies.length
+      ? <div className="mt-6 space-y-4">{biographies.map(item => <PublishedBiographyCard key={item.id} biography={item} />)}</div>
+      : <p className="mt-6 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak opublikowanych biografii.</p>}
   </section>;
 }

@@ -1,6 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { AdminTabs } from "@/components/admin-tabs";
-import { ArtistBiographyModeration, type BiographySubmission } from "@/components/artist-biography-moderation";
+import {
+  ArtistBiographyModeration,
+  PublishedArtistBiographies,
+  type BiographySubmission,
+  type PublishedBiography,
+} from "@/components/artist-biography-moderation";
 import { getViewer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -12,13 +17,31 @@ export default async function AdminBiographiesPage() {
   if (viewer.role !== "admin") notFound();
 
   const client = await createClient();
-  const result = await client.from("artist_biography_submissions")
-    .select("id,content,created_at,artist:artists!artist_biography_submissions_artist_id_fkey(name,slug,description,enrichment_field_sources),author:users!artist_biography_submissions_user_id_fkey(username)")
-    .eq("status", "pending")
-    .order("created_at")
-    .limit(100)
-    .returns<BiographySubmission[]>();
-  if (result.error) throw new Error("Nie udało się pobrać zgłoszeń biografii.");
+  const [submissionsResult, publishedResult] = await Promise.all([
+    client.from("artist_biography_submissions")
+      .select("id,content,created_at,artist:artists!artist_biography_submissions_artist_id_fkey(name,slug,description,enrichment_field_sources),author:users!artist_biography_submissions_user_id_fkey(username)")
+      .eq("status", "pending")
+      .order("created_at")
+      .limit(100)
+      .returns<BiographySubmission[]>(),
+    client.from("artists")
+      .select("id,name,slug,description,enrichment_field_sources,biography_author:users!artists_biography_author_id_fkey(username)")
+      .not("description", "is", null)
+      .order("name")
+      .limit(500),
+  ]);
+  if (submissionsResult.error || publishedResult.error) throw new Error("Nie udało się pobrać biografii.");
+  const published = (publishedResult.data ?? []).flatMap(item => (
+    item.description && !item.enrichment_field_sources?.description
+      ? [{
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+        description: item.description,
+        biography_author: Array.isArray(item.biography_author) ? item.biography_author[0] ?? null : item.biography_author,
+      } satisfies PublishedBiography]
+      : []
+  ));
 
   return <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
     <header className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
@@ -28,7 +51,10 @@ export default async function AdminBiographiesPage() {
       <AdminTabs active="biographies" />
     </header>
     <div className="mt-6">
-      <ArtistBiographyModeration submissions={result.data ?? []} />
+      <ArtistBiographyModeration submissions={submissionsResult.data ?? []} />
+    </div>
+    <div className="mt-6">
+      <PublishedArtistBiographies biographies={published} />
     </div>
   </main>;
 }

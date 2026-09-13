@@ -35,3 +35,30 @@ export async function moderateArtistBiographyAction(
   revalidatePath("/u/[username]", "page");
   return { success: true, message: decision === "approve" ? "Biografia została opublikowana." : "Biografia została odrzucona." };
 }
+
+export async function removeArtistBiographyAction(
+  _state: BiographyModerationState,
+  formData: FormData,
+): Promise<BiographyModerationState> {
+  const viewer = await getViewer();
+  if (!viewer || viewer.role !== "admin") return { message: "Brak uprawnień administratora." };
+
+  const artistId = Number(formData.get("artistId"));
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!Number.isSafeInteger(artistId) || artistId < 1 || reason.length > 1000) {
+    return { message: "Nieprawidłowe dane usuwanej biografii." };
+  }
+
+  const client = await createClient();
+  const { error } = await client.rpc("remove_artist_biography", {
+    target_artist_id: artistId,
+    reason: reason || null,
+  });
+  if (error) return { message: "Nie udało się usunąć biografii. Odśwież stronę i spróbuj ponownie." };
+
+  revalidatePath("/admin/biografie");
+  revalidatePath("/artist/[slug]", "page");
+  revalidatePath("/profil");
+  revalidatePath("/u/[username]", "page");
+  return { success: true, message: "Biografia została usunięta z profilu artysty." };
+}

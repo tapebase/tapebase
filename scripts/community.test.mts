@@ -28,6 +28,7 @@ const albumGenresMigration = await readFile(new URL("../supabase/migrations/2026
 const activeUsersMigration = await readFile(new URL("../supabase/migrations/202609110021_active_users_leaderboard.sql", import.meta.url), "utf8");
 const artistEnrichmentMigration = await readFile(new URL("../supabase/migrations/202609130022_artist_enrichment.sql", import.meta.url), "utf8");
 const artistBiographiesMigration = await readFile(new URL("../supabase/migrations/202609130025_artist_biographies.sql", import.meta.url), "utf8");
+const removeArtistBiographiesMigration = await readFile(new URL("../supabase/migrations/202609130026_remove_artist_biographies.sql", import.meta.url), "utf8");
 const draftSchema = `
   create role anon;
   create role authenticated;
@@ -164,6 +165,7 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(activeUsersMigration);
     await db.exec(artistEnrichmentMigration);
     await db.exec(artistBiographiesMigration);
+    await db.exec(removeArtistBiographiesMigration);
     assert.deepEqual((await db.query("select distinct country_code from public.artists")).rows, [{ country_code: "PL" }]);
     assert.deepEqual((await db.query("select distinct genre from public.albums")).rows, [{ genre: "rap" }]);
 
@@ -184,6 +186,18 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     ]);
     await db.exec("set role anon");
     assert.equal((await db.query<{ count: string }>("select public.accepted_biography_count($1)::text as count", [alice])).rows[0].count, "1");
+    await db.exec("reset role");
+    await db.exec("set role authenticated");
+    await db.query("select public.remove_artist_biography(1,'Nieaktualna treść')");
+    await db.exec("reset role");
+    assert.deepEqual((await db.query("select description,biography_author_id from public.artists where id=1")).rows, [
+      { description: null, biography_author_id: null },
+    ]);
+    assert.deepEqual((await db.query("select status,removal_reason from public.artist_biography_submissions where id=$1", [biographySubmission.rows[0].submit_artist_biography])).rows, [
+      { status: "removed", removal_reason: "Nieaktualna treść" },
+    ]);
+    await db.exec("set role anon");
+    assert.equal((await db.query<{ count: string }>("select public.accepted_biography_count($1)::text as count", [alice])).rows[0].count, "0");
     await db.exec("reset role");
     await db.query("update public.users set role='user' where id=$1", [bob]);
     const leaderboard = await db.query<{ username: string; activity_score: bigint }>(

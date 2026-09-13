@@ -226,3 +226,5 @@
   kopię nicku.
 - Licznik profilu obejmuje wszystkie biografie zaakceptowane w historii, także te,
   które zostały później zastąpione lepszą wersją.
+- Administrator może usunąć opublikowaną biografię. Tekst i autor znikają z profilu,
+  a prywatny rekord zgłoszenia zachowuje status `removed` dla historii moderacji.

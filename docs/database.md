@@ -161,6 +161,10 @@ powodu. Funkcja `accepted_biography_count` udostępnia na profilach wyłącznie 
 biografii danego użytkownika, które zostały zaakceptowane; obejmuje również wersje
 później zastąpione nowszą biografią.
 
+Administrator może usunąć opublikowaną biografię. Profil traci wtedy tekst i podpis,
+zgłoszenie otrzymuje status `removed`, a licznik autora zostaje pomniejszony. Treść
+pozostaje dostępna wyłącznie w prywatnej historii moderacji.
+
 ---
 
 ## albums
