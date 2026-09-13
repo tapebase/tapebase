@@ -81,7 +81,8 @@ async function applyCandidate(artist: ArtistRow, candidate: EnrichmentCandidate)
     ["description", candidate.description],
   ];
   for (const [field, value] of values) {
-    if ((artist[field] === null || artist[field] === "") && value !== null && value !== "") {
+    const replaceUnknownCountry = field === "country_code" && artist.country_code === "ZZ";
+    if ((artist[field] === null || artist[field] === "" || replaceUnknownCountry) && value !== null && value !== "") {
       patch[field] = value;
       fieldSources[field] = source;
     }
