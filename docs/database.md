@@ -97,6 +97,18 @@ Pola:
 * description
 * country_code
 * catalog_visible
+* real_name
+* birth_date
+* birth_date_precision
+* birth_place
+* enrichment_status
+* enrichment_source
+* enrichment_source_id
+* enrichment_source_url
+* enrichment_confidence
+* enrichment_checked_at
+* enrichment_error
+* enrichment_field_sources
 * created_at
 * updated_at
 
@@ -110,6 +122,24 @@ wcześniej istniejące profile jako `PL`.
 wykonawcy utworzonego z creditów albumu lub utworu. Profile techniczne pozostają
 dostępne przez bezpośredni adres i linki w tracklistach, ale nie trafiają do
 wyszukiwarki, katalogu artystów, rankingów ani synchronizacji koncertów.
+
+Enrichment po imporcie sprawdza najpierw dokładne Spotify Artist ID (`P1902`) w
+Wikidata, a następnie dokładną relację adresu Spotify w MusicBrainz. Tylko te dwa
+rodzaje powiązań mogą uzupełnić profil automatycznie. Wynik wyszukiwania po nazwie
+ustawia `enrichment_status = review` i wymaga decyzji administratora.
+
+Automat zapisuje prawdziwe imię, datę i miejsce urodzenia, kraj oraz krótki opis
+wyłącznie w pustych polach. `enrichment_field_sources` przechowuje źródło osobno dla
+każdego zapisanego pola, dzięki czemu ponowne uruchomienie nie zastępuje danych
+redakcyjnych. Identyfikator i adres zaakceptowanego rekordu źródłowego pozostają
+widoczne w `enrichment_source_id` oraz `enrichment_source_url`.
+
+## artist_enrichment_candidates
+
+Kandydaci znalezieni bez bezpiecznego identyfikatora trafiają do prywatnej kolejki
+administratora. Rekord przechowuje źródło, QID lub MBID, podgląd danych, dowody
+dopasowania, poziom pewności oraz decyzję moderatora. RLS nie udostępnia kolejki
+anonimowym ani zwykłym zalogowanym użytkownikom.
 
 ---
 

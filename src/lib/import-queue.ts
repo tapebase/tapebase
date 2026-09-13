@@ -5,6 +5,7 @@ import { discover, previewAlbum, reviewDiscovery } from "../../scripts/spotify/p
 import { slug } from "../../scripts/spotify/model.mts";
 import { prepareImport } from "../../scripts/spotify/payload.mts";
 import { importClient, writeImport } from "../../scripts/spotify/writer.mts";
+import { enrichArtistBySpotifyId } from "@/lib/artist-enrichment";
 
 type Job = {
   id: number; submission_id: number; spotify_type: "artist" | "album"; spotify_id: string;
@@ -224,6 +225,7 @@ async function executeBatch(maxItems = 3): Promise<QueueBatchResult> {
         if (primaryArtistId) {
           const { error: countryError } = await database.from("artists").update({ country_code: countryCode }).eq("spotify_id", primaryArtistId);
           if (countryError) throw new Error("Nie udało się przypisać kraju głównemu artyście.");
+          await enrichArtistBySpotifyId(primaryArtistId);
         }
         const { data: album } = await database.from("albums").select("id").eq("spotify_id", item.spotify_album_id).single();
         await database.from("catalog_import_items").update({

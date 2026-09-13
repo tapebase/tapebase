@@ -193,3 +193,17 @@
 - Gatunek artysty jest tylko wskazówką dla jego wydawnictw. Nie traktujemy typu
   `album`, `single` lub `compilation` ze Spotify jako gatunku muzycznego.
 - Istniejący katalog otrzymuje Rap, zgodnie z dotychczasowym zakresem polskiego rapu.
+
+## Automatyczne dane artystów (2026-09-13)
+
+- Spotify pozostaje źródłem tożsamości artysty i dyskografii.
+- Wikidata jest pierwszym źródłem danych faktograficznych. Automatyczne dopasowanie
+  wymaga dokładnego Spotify Artist ID zapisanego jako `P1902`.
+- MusicBrainz jest źródłem zapasowym wyłącznie wtedy, gdy rekord ma dokładną relację
+  URL do wskazanego profilu Spotify. Nie używamy podobieństwa nazw do automatycznej decyzji.
+- Wyniki znalezione po nazwie trafiają do panelu administratora. Brak pewności oznacza
+  brak zapisu danych na profilu.
+- Enrichment uzupełnia tylko puste pola. Dane redakcyjne i ręcznie poprawione mają
+  pierwszeństwo przed kolejnymi synchronizacjami.
+- Opis jest krótkim tekstem złożonym z faktów strukturalnych; nie kopiujemy biografii
+  z Wikipedii.

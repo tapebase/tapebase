@@ -58,7 +58,13 @@ export default async function ArtistPage({ params, searchParams }: Props) {
             <div className="rounded-2xl bg-[#f6f4ef] px-6 py-4"><p className="text-sm text-zinc-500">Albumy w katalogu</p><p className="text-4xl font-black">{albums.count}</p></div>
             <div className="rounded-2xl bg-[#f6f4ef] px-6 py-4"><p className="text-sm text-zinc-500">Utwory z udziałem</p><p className="text-4xl font-black">{tracks.count}</p></div>
           </div>
+          {(artist.real_name || artist.birth_date || artist.birth_place) && <dl className="mt-6 grid gap-4 rounded-2xl border border-zinc-200 p-5 text-sm sm:grid-cols-3">
+            {artist.real_name && <div><dt className="font-bold text-zinc-500">Imię i nazwisko</dt><dd className="mt-1 font-semibold">{artist.real_name}</dd></div>}
+            {artist.birth_date && <div><dt className="font-bold text-zinc-500">Data urodzenia</dt><dd className="mt-1 font-semibold">{artist.birth_date_precision === "year" ? artist.birth_date.slice(0, 4) : artist.birth_date_precision === "month" ? artist.birth_date.slice(0, 7) : artist.birth_date}</dd></div>}
+            {artist.birth_place && <div><dt className="font-bold text-zinc-500">Miejsce urodzenia</dt><dd className="mt-1 font-semibold">{artist.birth_place}</dd></div>}
+          </dl>}
           {artist.description && <p className="mt-6 max-w-3xl whitespace-pre-line text-zinc-600">{artist.description}</p>}
+          {artist.enrichment_source_url && <p className="mt-3 text-xs text-zinc-400">Dane: <a href={artist.enrichment_source_url} target="_blank" rel="noreferrer" className="underline">{artist.enrichment_source === "wikidata" ? "Wikidata" : "MusicBrainz"}</a></p>}
         </div>
       </div>
     </section>

@@ -12,6 +12,7 @@ import { prepareImport } from "../../scripts/spotify/payload.mts";
 import { importClient, writeImport } from "../../scripts/spotify/writer.mts";
 import type { AdminBatchImportInput } from "@/lib/spotify-admin-validation";
 import type { MusicGenre } from "@/lib/genres";
+import { enrichArtistBySpotifyId } from "@/lib/artist-enrichment";
 
 export type BatchPreviewItem =
   | { artistId: string; result: ReviewedSpotifyDiscovery; error?: never }
@@ -140,6 +141,7 @@ export async function executeAdminBatchImport(
       const { error: genreError } = await database.from("albums").update({ genre: genres.get(item.artistId) ?? "rap" })
         .in("spotify_id", [...albumIds]);
       if (genreError) throw new Error("Albumy zapisano, ale nie udało się przypisać gatunku.");
+      await enrichArtistBySpotifyId(item.artistId);
       results.push({
         artistId: item.artistId,
         artistName: item.result.artist.name,
@@ -183,5 +185,6 @@ export async function executeAdminAlbumImport(
   }
   const { error: genreError } = await database.from("albums").update({ genre }).eq("spotify_id", albumId);
   if (genreError) throw new Error("Album zapisano, ale nie udało się przypisać gatunku.");
+  if (primaryArtistId) await enrichArtistBySpotifyId(primaryArtistId);
   return result;
 }

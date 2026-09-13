@@ -107,6 +107,9 @@ Instrukcja: [spotify-import.md](spotify-import.md).
 * [x] Główny gatunek albumu i sugestia importera na podstawie etykiet artysty ze Spotify
 * [x] Moderacja zgłoszonych komentarzy
 * [x] Panel zgłoszeń błędów i pomysłów testerów
+* [x] Automatyczne uzupełnianie danych artystów z Wikidata i dokładnych relacji MusicBrainz
+* [x] Ręczna kolejka weryfikacji niepewnych dopasowań artystów
+* [x] Enrichment istniejącego katalogu uruchamiany partiami przez administratora
 
 ---
 
