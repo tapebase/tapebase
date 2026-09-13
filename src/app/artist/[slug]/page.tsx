@@ -13,6 +13,7 @@ import { ArtistBiographyForm } from "@/components/artist-biography-form";
 import { createClient } from "@/lib/supabase/server";
 import { getArtistVideos } from "@/lib/artist-videos";
 import { ArtistVideos } from "@/components/artist-videos";
+import { ArtistCommunitySection } from "@/components/artist-community";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 const birthDateFormat = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -140,5 +141,6 @@ export default async function ArtistPage({ params, searchParams }: Props) {
       </li>)}</ul> : <Empty>Brak utworów z udziałem tego artysty na tej stronie.</Empty>}
       <Pagination path={artistPath(artist)} page={trackPage} count={tracks.count} pageKey="tracks" other={{ albums: String(albumPage) }} />
     </section>
+    {artist.catalog_visible && <ArtistCommunitySection artistId={artist.id} comments={community.comments} viewer={viewer} returnPath={returnPath} />}
   </main>;
 }

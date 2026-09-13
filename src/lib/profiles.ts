@@ -42,7 +42,8 @@ export type ProfileComment = {
   content: string;
   created_at: string;
   updated_at: string;
-  album: Pick<ProfileAlbum, "id" | "title" | "slug">;
+  album: Pick<ProfileAlbum, "id" | "title" | "slug"> | null;
+  artist: Pick<ProfileArtist, "id" | "name" | "slug"> | null;
 };
 
 export type ProfileListened = {
@@ -70,7 +71,11 @@ function one<T>(value: Related<T>) {
 
 type RawAlbumRating = { rating: number; updated_at: string; albums: Related<ProfileAlbum> };
 type RawArtistRating = { rating: number; updated_at: string; artists: Related<ProfileArtist> };
-type RawComment = { id: number; content: string; created_at: string; updated_at: string; albums: Related<Pick<ProfileAlbum, "id" | "title" | "slug">> };
+type RawComment = {
+  id: number; content: string; created_at: string; updated_at: string;
+  albums: Related<Pick<ProfileAlbum, "id" | "title" | "slug">>;
+  artists: Related<Pick<ProfileArtist, "id" | "name" | "slug">>;
+};
 type RawListened = { created_at: string; albums: Related<ProfileAlbum> };
 
 async function profileActivity(profileResult: { data: PublicUser | null; error: unknown }): Promise<PublicProfileActivity | null> {
@@ -86,7 +91,7 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
       .select("rating,updated_at,artists(id,name,slug,image_url)", { count: "exact" })
       .eq("user_id", profile.id).order("updated_at", { ascending: false }),
     client.from("comments")
-      .select("id,content,created_at,updated_at,albums(id,title,slug)", { count: "exact" })
+      .select("id,content,created_at,updated_at,albums(id,title,slug),artists(id,name,slug)", { count: "exact" })
       .eq("user_id", profile.id).order("created_at", { ascending: false }).limit(100),
     client.from("listened")
       .select("created_at,albums(id,title,slug,cover_url)", { count: "exact" })
@@ -108,7 +113,8 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
   });
   const comments = ((commentsResult.data ?? []) as RawComment[]).flatMap(row => {
     const album = one(row.albums);
-    return album ? [{ id: row.id, content: row.content, created_at: row.created_at, updated_at: row.updated_at, album }] : [];
+    const artist = one(row.artists);
+    return album || artist ? [{ id: row.id, content: row.content, created_at: row.created_at, updated_at: row.updated_at, album, artist }] : [];
   });
   const listened = ((listenedResult.data ?? []) as RawListened[]).flatMap(row => {
     const album = one(row.albums);

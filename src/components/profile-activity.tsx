@@ -57,10 +57,10 @@ export function ProfileActivitySections({ activity }: { activity: PublicProfileA
 
     <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
       <h2 className="text-2xl font-black">Komentarze</h2>
-      {activity.comments.length ? <ol className="mt-4 space-y-3">{activity.comments.map(comment => <li key={comment.id} className="rounded-xl border border-zinc-100 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3"><Link href={albumPath(comment.album)} className="font-bold hover:underline">{comment.album.title}</Link><time className="text-xs text-zinc-500" dateTime={comment.created_at}>{date.format(new Date(comment.created_at))}</time></div>
+      {activity.comments.length ? <ol className="mt-4 space-y-3">{activity.comments.map(comment => { const href = comment.album ? albumPath(comment.album) : comment.artist ? artistPath(comment.artist) : "#"; const title = comment.album?.title ?? comment.artist?.name ?? "Komentarz"; return <li key={comment.id} className="rounded-xl border border-zinc-100 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3"><Link href={`${href}#comment-${comment.id}`} className="font-bold hover:underline">{title}</Link><time className="text-xs text-zinc-500" dateTime={comment.created_at}>{date.format(new Date(comment.created_at))}</time></div>
         <p className="mt-2 whitespace-pre-wrap break-words text-zinc-700">{comment.content}</p>
-      </li>)}</ol> : <p className="mt-4 text-zinc-500">Brak komentarzy.</p>}
+      </li>; })}</ol> : <p className="mt-4 text-zinc-500">Brak komentarzy.</p>}
     </section>
 
     <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">

@@ -30,7 +30,7 @@ export async function moderateCommentAction(formData: FormData) {
   if (!Number.isSafeInteger(commentId) || !["hide", "restore"].includes(action)) return;
   const { error } = await client.rpc("moderate_comment", { target_comment_id: commentId, moderation_action: action, reason: reason || null });
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/komentarze"); revalidatePath("/"); revalidatePath("/album/[slug]", "page");
+  revalidatePath("/admin/komentarze"); revalidatePath("/"); revalidatePath("/album/[slug]", "page"); revalidatePath("/artist/[slug]", "page");
 }
 
 export async function dismissCommentReportAction(formData: FormData) {

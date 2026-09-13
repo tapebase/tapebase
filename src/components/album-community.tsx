@@ -19,7 +19,7 @@ function CommentThreadItem({ comment, albumId, viewer, returnPath, depth = 0 }: 
     <article id={`comment-${comment.id}`} className="scroll-mt-6 rounded-2xl border border-zinc-200 p-4 target:ring-2 target:ring-amber-400 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><Link href={`/u/${encodeURIComponent(comment.username)}`} className="flex items-center gap-3 font-bold hover:underline"><UserAvatar username={comment.username} src={comment.avatar_url} size="small" /><span>@{comment.username}</span></Link><time className="text-xs text-zinc-500" dateTime={comment.created_at}>{commentDate.format(new Date(comment.created_at))}</time></div>
       <p className="mt-3 whitespace-pre-wrap break-words text-zinc-700">{comment.content}</p>
-      <CommentActions albumId={albumId} commentId={comment.id} content={comment.content} likeCount={comment.likeCount}
+      <CommentActions targetType="album" targetId={albumId} commentId={comment.id} content={comment.content} likeCount={comment.likeCount}
         likedByViewer={comment.likedByViewer} isOwner={viewer?.id === comment.user_id} isSignedIn={Boolean(viewer)} returnPath={returnPath} />
     </article>
     {comment.children.length > 0 && <ol aria-label={`Odpowiedzi na komentarz użytkownika ${comment.username}`}>

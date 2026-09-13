@@ -35,7 +35,7 @@
 - Role: user, admin, verified_artist, verified_producer.
 - Zweryfikowani artyści i producenci będą mieć plakietki.
 - Komentarze tworzą wielopoziomowe dyskusje. Odpowiedź zawsze należy do tego
-  samego albumu co komentarz nadrzędny.
+  samego albumu albo artysty co komentarz nadrzędny.
 
 ## Administracja
 

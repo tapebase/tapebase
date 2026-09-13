@@ -29,6 +29,7 @@ const activeUsersMigration = await readFile(new URL("../supabase/migrations/2026
 const artistEnrichmentMigration = await readFile(new URL("../supabase/migrations/202609130022_artist_enrichment.sql", import.meta.url), "utf8");
 const artistBiographiesMigration = await readFile(new URL("../supabase/migrations/202609130025_artist_biographies.sql", import.meta.url), "utf8");
 const removeArtistBiographiesMigration = await readFile(new URL("../supabase/migrations/202609130026_remove_artist_biographies.sql", import.meta.url), "utf8");
+const artistCommentsMigration = await readFile(new URL("../supabase/migrations/202609130030_artist_comments.sql", import.meta.url), "utf8");
 const draftSchema = `
   create role anon;
   create role authenticated;
@@ -166,6 +167,7 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(artistEnrichmentMigration);
     await db.exec(artistBiographiesMigration);
     await db.exec(removeArtistBiographiesMigration);
+    await db.exec(artistCommentsMigration);
     assert.deepEqual((await db.query("select distinct country_code from public.artists")).rows, [{ country_code: "PL" }]);
     assert.deepEqual((await db.query("select distinct genre from public.albums")).rows, [{ genre: "rap" }]);
 
@@ -247,6 +249,10 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.query("insert into public.artist_ratings(user_id,artist_id,rating) values ($1,1,8.5)", [alice]);
     await db.query("insert into public.comments(user_id,album_id,content) values ($1,1,'Świetny album')", [alice]);
     await db.query("insert into public.comments(user_id,album_id,parent_comment_id,content) values ($1,1,1,'Zgadzam się')", [alice]);
+    const artistComment = await db.query<{ id: bigint }>("insert into public.comments(user_id,artist_id,content) values ($1,1,'Świetny artysta') returning id", [alice]);
+    await db.query("insert into public.comments(user_id,artist_id,parent_comment_id,content) values ($1,1,$2,'Zgadzam się także tutaj')", [alice, artistComment.rows[0].id]);
+    await assert.rejects(db.query("insert into public.comments(user_id,album_id,artist_id,content) values ($1,1,1,'Nieprawidłowy cel')", [alice]));
+    await assert.rejects(db.query("insert into public.comments(user_id,album_id,parent_comment_id,content) values ($1,1,$2,'Zły wątek')", [alice, artistComment.rows[0].id]));
     await db.query("insert into public.user_feedback(user_id,category,message,page_url) values ($1,'bug','Nie działa przycisk','/album/album')", [alice]);
     await db.query("insert into public.ratings(user_id,album_id,rating) values ($1,1,9) on conflict (user_id,album_id) do update set rating=excluded.rating", [alice]);
     await db.query("update public.comments set content='Bardzo dobry album' where user_id=$1", [alice]);
@@ -273,10 +279,12 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.query("insert into storage.objects(bucket_id,name) values ('avatars',$1)", [`${bob}/avatar`]);
     await db.query("insert into public.comment_likes(user_id,comment_id) values ($1,1)", [bob]);
     await db.query("insert into public.comments(user_id,album_id,parent_comment_id,content) values ($1,1,1,'Odpowiedź Boba')", [bob]);
+    await db.query("insert into public.comment_likes(user_id,comment_id) values ($1,$2)", [bob, artistComment.rows[0].id]);
+    await db.query("insert into public.comments(user_id,artist_id,parent_comment_id,content) values ($1,1,$2,'Odpowiedź o artyście')", [bob, artistComment.rows[0].id]);
     await db.query("select public.report_comment(1,'other','Do sprawdzenia')");
     await assert.rejects(db.query("insert into public.comment_likes(user_id,comment_id) values ($1,1)", [bob]));
     await db.query("delete from public.comment_likes where user_id=$1", [alice]);
-    assert.equal((await db.query("select * from public.comment_likes")).rows.length, 1);
+    assert.equal((await db.query("select * from public.comment_likes")).rows.length, 2);
     assert.equal((await db.query("select * from public.comment_reports")).rows.length, 1);
     assert.deepEqual((await db.query("select kind,comment_id from public.notifications where kind in ('comment_like','comment_reply')")).rows, []);
     assert.equal((await db.query("select * from public.user_feedback")).rows.length, 0);
@@ -284,9 +292,9 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
 
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [alice]);
     await db.exec("set role authenticated");
-    assert.deepEqual((await db.query("select kind from public.notifications where kind in ('comment_like','comment_reply') order by kind")).rows, [
-      { kind: "comment_like" },
-      { kind: "comment_reply" },
+    assert.deepEqual((await db.query("select kind,count(*)::integer as count from public.notifications where kind in ('comment_like','comment_reply') group by kind order by kind")).rows, [
+      { kind: "comment_like", count: 2 },
+      { kind: "comment_reply", count: 2 },
     ]);
     assert.equal((await db.query("select * from public.user_feedback")).rows.length, 1);
     await db.exec("reset role");
@@ -295,8 +303,8 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     assert.equal((await db.query("select * from public.users")).rows.length, 2);
     assert.equal((await db.query("select * from public.ratings")).rows.length, 1);
     assert.equal((await db.query("select * from public.artist_ratings")).rows.length, 1);
-    assert.equal((await db.query("select * from public.comments")).rows.length, 3);
-    assert.equal((await db.query("select * from public.comment_likes")).rows.length, 1);
+    assert.equal((await db.query("select * from public.comments")).rows.length, 6);
+    assert.equal((await db.query("select * from public.comment_likes")).rows.length, 2);
     assert.equal((await db.query("select * from public.listened")).rows.length, 1);
     assert.equal((await db.query("select * from storage.objects")).rows.length, 2);
     await db.exec("reset role");

@@ -18,6 +18,21 @@ function validAlbumId(value: number) {
   return Number.isSafeInteger(value) && value > 0;
 }
 
+export type CommentTargetType = "album" | "artist";
+
+function commentTarget(type: CommentTargetType, id: number) {
+  if (!validAlbumId(id) || !["album", "artist"].includes(type)) return null;
+  return type === "album"
+    ? { column: "album_id" as const, values: { album_id: id, artist_id: null } }
+    : { column: "artist_id" as const, values: { album_id: null, artist_id: id } };
+}
+
+function revalidateCommentTarget(type: CommentTargetType) {
+  revalidatePath(type === "album" ? "/album/[slug]" : "/artist/[slug]", "page");
+  revalidatePath("/profil");
+  revalidatePath("/");
+}
+
 export async function saveRating(
   albumId: number,
   _state: CommunityActionState,
@@ -120,8 +135,26 @@ export async function addComment(
   return { success: true, message: "Komentarz dodany." };
 }
 
+export async function addArtistComment(
+  artistId: number,
+  _state: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
+  const auth = await authorizedClient();
+  if (!auth) return { message: "Zaloguj się, aby dodać komentarz." };
+  const content = typeof formData.get("content") === "string" ? String(formData.get("content")).trim() : "";
+  if (!validAlbumId(artistId) || content.length < 1 || content.length > 2000) {
+    return { message: "Komentarz musi mieć od 1 do 2000 znaków." };
+  }
+  const { error } = await auth.client.from("comments").insert({ user_id: auth.userId, artist_id: artistId, content });
+  if (error) return { message: "Nie udało się dodać komentarza." };
+  revalidateCommentTarget("artist");
+  return { success: true, message: "Komentarz dodany." };
+}
+
 export async function addReply(
-  albumId: number,
+  targetType: CommentTargetType,
+  targetId: number,
   parentCommentId: number,
   _state: CommunityActionState,
   formData: FormData,
@@ -129,30 +162,30 @@ export async function addReply(
   const auth = await authorizedClient();
   if (!auth) return { message: "Zaloguj się, aby odpowiedzieć." };
   const content = typeof formData.get("content") === "string" ? String(formData.get("content")).trim() : "";
-  if (!validAlbumId(albumId) || !Number.isSafeInteger(parentCommentId) || parentCommentId < 1 || content.length < 1 || content.length > 2000) {
+  const target = commentTarget(targetType, targetId);
+  if (!target || !Number.isSafeInteger(parentCommentId) || parentCommentId < 1 || content.length < 1 || content.length > 2000) {
     return { message: "Odpowiedź musi mieć od 1 do 2000 znaków." };
   }
   const { data: parent, error: parentError } = await auth.client.from("comments")
     .select("id")
     .eq("id", parentCommentId)
-    .eq("album_id", albumId)
+    .eq(target.column, targetId)
     .maybeSingle();
   if (parentError || !parent) return { message: "Komentarz, na który odpowiadasz, już nie istnieje." };
   const { error } = await auth.client.from("comments").insert({
     user_id: auth.userId,
-    album_id: albumId,
+    ...target.values,
     parent_comment_id: parentCommentId,
     content,
   });
   if (error) return { message: "Nie udało się dodać odpowiedzi." };
-  revalidatePath("/album/[slug]", "page");
-  revalidatePath("/profil");
-  revalidatePath("/");
+  revalidateCommentTarget(targetType);
   return { success: true, message: "Odpowiedź dodana." };
 }
 
 export async function editComment(
-  albumId: number,
+  targetType: CommentTargetType,
+  targetId: number,
   commentId: number,
   _state: CommunityActionState,
   formData: FormData,
@@ -160,24 +193,25 @@ export async function editComment(
   const auth = await authorizedClient();
   if (!auth) return { message: "Zaloguj się, aby edytować komentarz." };
   const content = typeof formData.get("content") === "string" ? String(formData.get("content")).trim() : "";
-  if (!validAlbumId(albumId) || !Number.isSafeInteger(commentId) || commentId < 1 || content.length < 1 || content.length > 2000) {
+  const target = commentTarget(targetType, targetId);
+  if (!target || !Number.isSafeInteger(commentId) || commentId < 1 || content.length < 1 || content.length > 2000) {
     return { message: "Komentarz musi mieć od 1 do 2000 znaków." };
   }
   const { data, error } = await auth.client.from("comments")
     .update({ content })
     .eq("id", commentId)
     .eq("user_id", auth.userId)
-    .eq("album_id", albumId)
+    .eq(target.column, targetId)
     .select("id")
     .maybeSingle();
   if (error || !data) return { message: "Nie udało się edytować komentarza." };
-  revalidatePath("/album/[slug]", "page");
-  revalidatePath("/");
+  revalidateCommentTarget(targetType);
   return { success: true, message: "Komentarz został zaktualizowany." };
 }
 
 export async function toggleCommentLike(
-  albumId: number,
+  targetType: CommentTargetType,
+  targetId: number,
   commentId: number,
   enabled: boolean,
   _state: CommunityActionState,
@@ -185,7 +219,7 @@ export async function toggleCommentLike(
   void _state;
   const auth = await authorizedClient();
   if (!auth) return { message: "Zaloguj się, aby polubić komentarz." };
-  if (!validAlbumId(albumId) || !Number.isSafeInteger(commentId) || commentId < 1) {
+  if (!commentTarget(targetType, targetId) || !Number.isSafeInteger(commentId) || commentId < 1) {
     return { message: "Nieprawidłowy komentarz." };
   }
   const query = enabled
@@ -193,7 +227,7 @@ export async function toggleCommentLike(
     : auth.client.from("comment_likes").delete().eq("user_id", auth.userId).eq("comment_id", commentId);
   const { error } = await query;
   if (error) return { message: enabled ? "Nie możesz polubić tego komentarza." : "Nie udało się cofnąć polubienia." };
-  revalidatePath("/album/[slug]", "page");
+  revalidateCommentTarget(targetType);
   return { success: true };
 }
 
@@ -219,11 +253,10 @@ export async function reportComment(
   return { success: true, message: "Komentarz został przekazany moderatorom." };
 }
 
-export async function deleteComment(albumId: number, commentId: number) {
+export async function deleteComment(targetType: CommentTargetType, targetId: number, commentId: number) {
   const auth = await authorizedClient();
-  if (!auth || !validAlbumId(albumId) || !Number.isSafeInteger(commentId)) return;
-  await auth.client.from("comments").delete().eq("id", commentId).eq("user_id", auth.userId).eq("album_id", albumId);
-  revalidatePath("/album/[slug]", "page");
-  revalidatePath("/profil");
-  revalidatePath("/");
+  const target = commentTarget(targetType, targetId);
+  if (!auth || !target || !Number.isSafeInteger(commentId)) return;
+  await auth.client.from("comments").delete().eq("id", commentId).eq("user_id", auth.userId).eq(target.column, targetId);
+  revalidateCommentTarget(targetType);
 }

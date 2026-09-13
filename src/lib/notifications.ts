@@ -35,14 +35,16 @@ export async function getNotifications(userId: string, limit = 100): Promise<Not
   const [albums, artists, comments] = await Promise.all([
     albumIds.length ? client.from("albums").select("spotify_id,slug").in("spotify_id", albumIds) : Promise.resolve({ data: [], error: null }),
     artistIds.length ? client.from("artists").select("id,spotify_id,slug").in("spotify_id", artistIds) : Promise.resolve({ data: [], error: null }),
-    commentIds.length ? client.from("comments").select("id,album:albums(slug)").in("id", commentIds) : Promise.resolve({ data: [], error: null }),
+    commentIds.length ? client.from("comments").select("id,album:albums(slug),artist:artists(id,slug)").in("id", commentIds) : Promise.resolve({ data: [], error: null }),
   ]);
   if (albums.error || artists.error || comments.error) throw new Error("Nie udało się przygotować odnośników powiadomień.");
   const albumLinks = new Map((albums.data ?? []).map(album => [album.spotify_id, albumPath(album)]));
   const artistLinks = new Map((artists.data ?? []).map(artist => [artist.spotify_id, artistPath(artist)]));
   const commentLinks = new Map((comments.data ?? []).flatMap(comment => {
     const album = Array.isArray(comment.album) ? comment.album[0] : comment.album;
-    return album ? [[comment.id, `${albumPath(album)}#comment-${comment.id}`] as const] : [];
+    const artist = Array.isArray(comment.artist) ? comment.artist[0] : comment.artist;
+    const path = album ? albumPath(album) : artist ? artistPath(artist) : null;
+    return path ? [[comment.id, `${path}#comment-${comment.id}`] as const] : [];
   }));
   return rows.map(row => {
     const submission = Array.isArray(row.submission) ? row.submission[0] : row.submission;

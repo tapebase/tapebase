@@ -3,7 +3,7 @@ import { catalogClient } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
 import type { Viewer } from "@/lib/auth";
 
-export type AlbumComment = {
+export type CommunityComment = {
   id: number;
   user_id: string;
   content: string;
@@ -14,8 +14,10 @@ export type AlbumComment = {
   likeCount: number;
   likedByViewer: boolean;
   parentCommentId: number | null;
-  children: AlbumComment[];
+  children: CommunityComment[];
 };
+
+export type AlbumComment = CommunityComment;
 
 export type AlbumCommunity = {
   average: number | null;
@@ -35,6 +37,7 @@ export type ArtistCommunity = {
   albumAverage: number | null;
   ratedAlbumCount: number;
   viewerRating: number | null;
+  comments: CommunityComment[];
 };
 
 export type LatestComment = {
@@ -43,7 +46,8 @@ export type LatestComment = {
   createdAt: string;
   rating: number | null;
   author: { username: string; avatarUrl: string | null };
-  album: { id: number; title: string; slug: string; cover_url: string | null };
+  target: { type: "album"; id: number; title: string; slug: string; imageUrl: string | null }
+    | { type: "artist"; id: number; title: string; slug: string | null; imageUrl: string | null };
 };
 
 type CommentResult = {
@@ -59,11 +63,13 @@ type CommentResult = {
 type LatestCommentResult = {
   id: number;
   user_id: string;
-  album_id: number;
+  album_id: number | null;
+  artist_id: number | null;
   content: string;
   created_at: string;
   users: { username: string; avatar_url: string | null } | { username: string; avatar_url: string | null }[] | null;
   albums: { id: number; title: string; slug: string; cover_url: string | null } | { id: number; title: string; slug: string; cover_url: string | null }[] | null;
+  artists: { id: number; name: string; slug: string | null; image_url: string | null } | { id: number; name: string; slug: string | null; image_url: string | null }[] | null;
 };
 
 function relatedOne<T>(value: T | T[] | null) {
@@ -73,30 +79,36 @@ function relatedOne<T>(value: T | T[] | null) {
 export async function getLatestComments(limit = 6): Promise<LatestComment[]> {
   const client = catalogClient();
   const commentsResult = await client.from("comments")
-    .select("id,user_id,album_id,content,created_at,users!comments_user_id_fkey(username,avatar_url),albums(id,title,slug,cover_url)")
+    .select("id,user_id,album_id,artist_id,content,created_at,users!comments_user_id_fkey(username,avatar_url),albums(id,title,slug,cover_url),artists(id,name,slug,image_url)")
     .order("created_at", { ascending: false })
     .limit(limit);
   if (commentsResult.error) throw new Error("Nie udało się pobrać ostatnich komentarzy.");
 
   const comments = (commentsResult.data ?? []) as LatestCommentResult[];
   if (!comments.length) return [];
-  const ratingsResult = await client.from("ratings")
+  const albumComments = comments.filter(comment => comment.album_id !== null);
+  const ratingsResult = albumComments.length ? await client.from("ratings")
     .select("user_id,album_id,rating")
-    .in("user_id", [...new Set(comments.map(comment => comment.user_id))])
-    .in("album_id", [...new Set(comments.map(comment => comment.album_id))]);
+    .in("user_id", [...new Set(albumComments.map(comment => comment.user_id))])
+    .in("album_id", [...new Set(albumComments.map(comment => comment.album_id!))])
+    : { data: [], error: null };
   if (ratingsResult.error) throw new Error("Nie udało się pobrać ocen autorów komentarzy.");
   const ratings = new Map((ratingsResult.data ?? []).map(row => [`${row.user_id}:${row.album_id}`, Number(row.rating)]));
 
   return comments.flatMap(comment => {
     const author = relatedOne(comment.users);
     const album = relatedOne(comment.albums);
-    return author && album ? [{
+    const artist = relatedOne(comment.artists);
+    const target = album
+      ? { type: "album" as const, id: album.id, title: album.title, slug: album.slug, imageUrl: album.cover_url }
+      : artist ? { type: "artist" as const, id: artist.id, title: artist.name, slug: artist.slug, imageUrl: artist.image_url } : null;
+    return author && target ? [{
       id: comment.id,
       content: comment.content,
       createdAt: comment.created_at,
-      rating: ratings.get(`${comment.user_id}:${comment.album_id}`) ?? null,
+      rating: comment.album_id ? ratings.get(`${comment.user_id}:${comment.album_id}`) ?? null : null,
       author: { username: author.username, avatarUrl: author.avatar_url },
-      album,
+      target,
     }] : [];
   });
 }
@@ -105,24 +117,41 @@ export async function getAlbumCommunity(albumId: number, viewer: Viewer | null):
   const client = catalogClient();
   const [ratingsResult, commentsResult] = await Promise.all([
     client.from("ratings").select("rating").eq("album_id", albumId),
-    client.from("comments")
-      .select("id,user_id,content,created_at,updated_at,parent_comment_id,users!comments_user_id_fkey(username,avatar_url)")
-      .eq("album_id", albumId)
-      .order("created_at", { ascending: false })
-      .limit(100),
+    getCommentRows("album", albumId),
   ]);
 
   if (ratingsResult.error) throw new Error("Nie udało się pobrać ocen.");
   if (commentsResult.error) throw new Error("Nie udało się pobrać komentarzy.");
   const ratings = (ratingsResult.data ?? []).map(item => Number(item.rating));
-  const commentRows = commentsResult.data as CommentResult[] | null ?? [];
+  const commentRows = commentsResult.data;
+  const comments = await buildCommentThreads(commentRows, viewer);
+
+  return {
+    average: ratings.length ? ratings.reduce((sum, value) => sum + value, 0) / ratings.length : null,
+    ratingCount: ratings.length,
+    comments,
+  };
+}
+
+async function getCommentRows(target: "album" | "artist", targetId: number) {
+  const column = target === "album" ? "album_id" : "artist_id";
+  const result = await catalogClient().from("comments")
+    .select("id,user_id,content,created_at,updated_at,parent_comment_id,users!comments_user_id_fkey(username,avatar_url)")
+    .eq(column, targetId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  return { data: (result.data as CommentResult[] | null) ?? [], error: result.error };
+}
+
+async function buildCommentThreads(commentRows: CommentResult[], viewer: Viewer | null) {
+  const client = catalogClient();
   const commentIds = commentRows.map(comment => comment.id);
   const likesResult = commentIds.length
     ? await client.from("comment_likes").select("comment_id,user_id").in("comment_id", commentIds)
     : { data: [], error: null };
   if (likesResult.error) throw new Error("Nie udało się pobrać polubień komentarzy.");
   const likes = likesResult.data ?? [];
-  const flatComments: AlbumComment[] = commentRows.map(comment => {
+  const flatComments: CommunityComment[] = commentRows.map(comment => {
     const profile = Array.isArray(comment.users) ? comment.users[0] : comment.users;
     const commentLikes = likes.filter(like => like.comment_id === comment.id);
     return {
@@ -140,7 +169,7 @@ export async function getAlbumCommunity(albumId: number, viewer: Viewer | null):
     };
   });
   const byId = new Map(flatComments.map(comment => [comment.id, comment]));
-  const comments: AlbumComment[] = [];
+  const comments: CommunityComment[] = [];
   // Rows arrive newest first. Root discussions keep that order; replies are
   // displayed chronologically so a thread reads from top to bottom.
   for (const comment of flatComments) {
@@ -152,11 +181,7 @@ export async function getAlbumCommunity(albumId: number, viewer: Viewer | null):
     comment.children.sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id - b.id);
   }
 
-  return {
-    average: ratings.length ? ratings.reduce((sum, value) => sum + value, 0) / ratings.length : null,
-    ratingCount: ratings.length,
-    comments,
-  };
+  return comments;
 }
 
 export async function getViewerAlbumState(albumId: number, viewer: Viewer | null): Promise<ViewerAlbumState> {
@@ -178,7 +203,7 @@ export async function getViewerAlbumState(albumId: number, viewer: Viewer | null
 export async function getArtistCommunity(artistId: number, viewer: Viewer | null): Promise<ArtistCommunity> {
   const publicClient = catalogClient();
   const viewerClient = viewer ? await createClient() : null;
-  const [artistSummary, albumSummary, viewerRating] = await Promise.all([
+  const [artistSummary, albumSummary, viewerRating, commentsResult] = await Promise.all([
     publicClient.from("artist_rating_summary")
       .select("average,rating_count")
       .eq("artist_id", artistId)
@@ -191,15 +216,18 @@ export async function getArtistCommunity(artistId: number, viewer: Viewer | null
       ? viewerClient.from("artist_ratings").select("rating")
         .eq("artist_id", artistId).eq("user_id", viewer!.id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    getCommentRows("artist", artistId),
   ]);
-  if (artistSummary.error || albumSummary.error || viewerRating.error) {
+  if (artistSummary.error || albumSummary.error || viewerRating.error || commentsResult.error) {
     throw new Error("Nie udało się pobrać ocen artysty.");
   }
+  const comments = await buildCommentThreads(commentsResult.data, viewer);
   return {
     average: artistSummary.data ? Number(artistSummary.data.average) : null,
     ratingCount: artistSummary.data ? Number(artistSummary.data.rating_count) : 0,
     albumAverage: albumSummary.data ? Number(albumSummary.data.average) : null,
     ratedAlbumCount: albumSummary.data ? Number(albumSummary.data.rated_album_count) : 0,
     viewerRating: viewerRating.data ? Number(viewerRating.data.rating) : null,
+    comments,
   };
 }

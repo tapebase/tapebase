@@ -63,6 +63,7 @@ Instrukcja: [spotify-import.md](spotify-import.md).
 * [x] Ratings
 * [x] Oceny artystów i osobna średnia ocen albumów na profilu artysty
 * [x] Comments
+* [x] Komentarze i dyskusje na profilach artystów
 * [x] Edycja komentarzy i polubienia cudzych komentarzy
 * [x] Odpowiedzi i wielopoziomowe wątki dyskusji
 * [x] Powiadomienia o odpowiedziach i polubieniach komentarzy

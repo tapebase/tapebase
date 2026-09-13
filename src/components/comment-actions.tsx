@@ -10,11 +10,13 @@ import {
   toggleCommentLike,
 } from "@/app/actions/community";
 import type { CommunityActionState } from "@/app/actions/community";
+import type { CommentTargetType } from "@/app/actions/community";
 
 const initialState: CommunityActionState = {};
 
 export function CommentActions({
-  albumId,
+  targetType,
+  targetId,
   commentId,
   content,
   likeCount,
@@ -23,7 +25,8 @@ export function CommentActions({
   isSignedIn,
   returnPath,
 }: {
-  albumId: number;
+  targetType: CommentTargetType;
+  targetId: number;
   commentId: number;
   content: string;
   likeCount: number;
@@ -35,15 +38,15 @@ export function CommentActions({
   const [editing, setEditing] = useState(false);
   const [replying, setReplying] = useState(false);
   const [editState, editAction, editPending] = useActionState(
-    editComment.bind(null, albumId, commentId),
+    editComment.bind(null, targetType, targetId, commentId),
     initialState,
   );
   const [likeState, likeAction, likePending] = useActionState(
-    toggleCommentLike.bind(null, albumId, commentId, !likedByViewer),
+    toggleCommentLike.bind(null, targetType, targetId, commentId, !likedByViewer),
     initialState,
   );
   const [replyState, replyAction, replyPending] = useActionState(
-    addReply.bind(null, albumId, commentId),
+    addReply.bind(null, targetType, targetId, commentId),
     initialState,
   );
   const [reportState, reportAction, reportPending] = useActionState(
@@ -80,7 +83,7 @@ export function CommentActions({
 
       {isOwner && <>
         <button type="button" onClick={() => setEditing(true)} className="text-sm font-semibold hover:underline">Edytuj</button>
-        <form action={deleteComment.bind(null, albumId, commentId)}><button className="text-sm font-semibold text-red-700 hover:underline">Usuń</button></form>
+        <form action={deleteComment.bind(null, targetType, targetId, commentId)}><button className="text-sm font-semibold text-red-700 hover:underline">Usuń</button></form>
       </>}
       {isSignedIn ? <button type="button" onClick={() => setReplying(value => !value)} className="text-sm font-semibold hover:underline">Odpowiedz</button>
         : <Link href={`/login?next=${encodeURIComponent(returnPath)}`} className="text-sm font-semibold hover:underline">Odpowiedz</Link>}

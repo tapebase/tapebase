@@ -279,13 +279,14 @@ zgłaszających pozostają niewidoczne.
 
 ## comments
 
-Komentarze pod albumami.
+Komentarze pod albumami i artystami.
 
 Pola:
 
 * id
 * user_id
 * album_id
+* artist_id
 * content
 * parent_comment_id
 * hidden_at
@@ -296,11 +297,13 @@ Pola:
 
 Autor może edytować i usuwać wyłącznie własny komentarz.
 Odpowiedzi korzystają z samoodwołania `parent_comment_id`, dzięki czemu interfejs
-wyświetla pełne, wielopoziomowe wątki. Baza wymaga, aby rodzic należał do tego
-samego albumu. Usunięcie komentarza nie usuwa cudzych odpowiedzi — stają się one
+wyświetla pełne, wielopoziomowe wątki. Dokładnie jedno z pól `album_id` i
+`artist_id` musi być ustawione, a rodzic musi należeć do tego samego albumu albo
+artysty. Usunięcie komentarza nie usuwa cudzych odpowiedzi — stają się one
 początkiem osobnego wątku. Zalogowany klient może aktualizować wyłącznie treść,
-bez zmiany autora, albumu ani rodzica.
+bez zmiany autora, celu ani rodzica.
 Migrację `202609090006_comment_threads.sql` wdrożono 2026-09-09.
+Obsługę komentarzy artystów dodaje migracja `202609130030_artist_comments.sql`.
 
 Komentarz zgłoszony przez użytkownika trafia do `comment_reports`. Administrator może
 ukryć go z obowiązkowym powodem, przywrócić albo odrzucić samo zgłoszenie. Ukryty wpis
