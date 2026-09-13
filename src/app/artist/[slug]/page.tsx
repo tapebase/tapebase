@@ -10,6 +10,7 @@ import { ArtistConcerts } from "@/components/artist-concerts";
 import { getArtistConcerts } from "@/lib/concerts";
 import { countryLabel } from "@/lib/countries";
 import { ArtistBiographyForm } from "@/components/artist-biography-form";
+import { createClient } from "@/lib/supabase/server";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 const birthDateFormat = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -55,6 +56,18 @@ export default async function ArtistPage({ params, searchParams }: Props) {
     getArtistCommunity(artist.id, viewer),
     getArtistConcerts(artist.id),
   ]);
+  let pendingBiography: { content: string } | null = null;
+  if (viewer && artist.catalog_visible) {
+    const client = await createClient();
+    const result = await client.from("artist_biography_submissions")
+      .select("content")
+      .eq("artist_id", artist.id)
+      .eq("user_id", viewer.id)
+      .eq("status", "pending")
+      .maybeSingle<{ content: string }>();
+    if (result.error) throw new Error("Nie udało się pobrać Twojej propozycji biografii.");
+    pendingBiography = result.data;
+  }
   const returnPath = artistPath(artist);
   const age = ageFromBirthDate(artist.birth_date, artist.birth_date_precision);
   const birthLocation = [artist.country_code ? countryLabel(artist.country_code) : null, artist.birth_place].filter(Boolean).join(" / ") || "—";
@@ -97,7 +110,12 @@ export default async function ArtistPage({ params, searchParams }: Props) {
             {artist.biography_author && <p className="mt-3 text-sm text-zinc-500">Dodane przez <Link href={`/u/${encodeURIComponent(artist.biography_author.username)}`} className="font-bold text-zinc-700 hover:underline">@{artist.biography_author.username}</Link></p>}
           </div>}
           {artist.catalog_visible && (viewer
-            ? <ArtistBiographyForm artistId={artist.id} hasBiography={Boolean(artist.description && !artist.enrichment_field_sources?.description)} />
+            ? <ArtistBiographyForm
+              artistId={artist.id}
+              hasBiography={Boolean(artist.description && !artist.enrichment_field_sources?.description)}
+              hasPending={Boolean(pendingBiography)}
+              initialContent={pendingBiography?.content ?? (!artist.enrichment_field_sources?.description ? artist.description ?? "" : "")}
+            />
             : <p className="mt-6 rounded-2xl border border-zinc-200 p-4 text-sm text-zinc-600"><Link href={`/login?next=${encodeURIComponent(returnPath)}`} className="font-bold underline">Zaloguj się</Link>, aby zaproponować biografię artysty.</p>)}
         </div>
       </div>

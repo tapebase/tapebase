@@ -8,7 +8,12 @@ export type BiographySubmission = {
   id: number;
   content: string;
   created_at: string;
-  artist: { name: string | null; slug: string | null } | null;
+  artist: {
+    name: string | null;
+    slug: string | null;
+    description: string | null;
+    enrichment_field_sources: Record<string, unknown> | null;
+  } | null;
   author: { username: string } | null;
 };
 
@@ -17,6 +22,9 @@ const date = new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium", timeStyle: 
 
 function BiographyCard({ submission }: { submission: BiographySubmission }) {
   const [state, action, pending] = useActionState(moderateArtistBiographyAction, initialState);
+  const currentBiography = submission.artist?.enrichment_field_sources?.description
+    ? null
+    : submission.artist?.description ?? null;
   return <article className="rounded-2xl border border-zinc-200 p-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
@@ -27,7 +35,16 @@ function BiographyCard({ submission }: { submission: BiographySubmission }) {
       </div>
       {submission.artist?.slug && <Link href={`/artist/${submission.artist.slug}`} className="text-sm font-bold underline">Otwórz profil</Link>}
     </div>
-    <p className="mt-4 whitespace-pre-line rounded-xl bg-[#f6f4ef] p-4 text-zinc-700">{submission.content}</p>
+    <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <section className="rounded-xl border border-zinc-200 p-4">
+        <h4 className="text-sm font-black uppercase tracking-wide text-zinc-500">Obecna biografia</h4>
+        <p className="mt-3 whitespace-pre-line text-zinc-700">{currentBiography ?? "Brak opublikowanej biografii."}</p>
+      </section>
+      <section className="rounded-xl bg-[#f6f4ef] p-4">
+        <h4 className="text-sm font-black uppercase tracking-wide text-zinc-500">Proponowana wersja</h4>
+        <p className="mt-3 whitespace-pre-line text-zinc-700">{submission.content}</p>
+      </section>
+    </div>
     <form action={action} className="mt-4">
       <input type="hidden" name="submissionId" value={submission.id} />
       <label className="block text-sm font-bold">Powód odrzucenia

@@ -13,7 +13,7 @@ export default async function AdminBiographiesPage() {
 
   const client = await createClient();
   const result = await client.from("artist_biography_submissions")
-    .select("id,content,created_at,artist:artists!artist_biography_submissions_artist_id_fkey(name,slug),author:users!artist_biography_submissions_user_id_fkey(username)")
+    .select("id,content,created_at,artist:artists!artist_biography_submissions_artist_id_fkey(name,slug,description,enrichment_field_sources),author:users!artist_biography_submissions_user_id_fkey(username)")
     .eq("status", "pending")
     .order("created_at")
     .limit(100)
