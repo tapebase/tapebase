@@ -92,7 +92,8 @@ export default async function ArtistPage({ params, searchParams }: Props) {
             <div><dt className="font-bold text-zinc-500">Miejsce urodzenia</dt><dd className="mt-1 font-semibold">{birthLocation}</dd></div>
           </dl>}
           {artist.description && !artist.enrichment_field_sources?.description && <div className="mt-6 max-w-3xl">
-            <p className="whitespace-pre-line text-zinc-600">{artist.description}</p>
+            <h2 className="text-2xl font-black">Biografia</h2>
+            <p className="mt-3 whitespace-pre-line text-zinc-600">{artist.description}</p>
             {artist.biography_author && <p className="mt-3 text-sm text-zinc-500">Dodane przez <Link href={`/u/${encodeURIComponent(artist.biography_author.username)}`} className="font-bold text-zinc-700 hover:underline">@{artist.biography_author.username}</Link></p>}
           </div>}
           {artist.catalog_visible && (viewer
