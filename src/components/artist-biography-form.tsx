@@ -1,14 +1,22 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { submitArtistBiography, type BiographyActionState } from "@/app/artist/[slug]/actions";
 
 const initialState: BiographyActionState = {};
 
 export function ArtistBiographyForm({ artistId, hasBiography }: { artistId: number; hasBiography: boolean }) {
+  const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(submitArtistBiography.bind(null, artistId), initialState);
+  if (!open) return <button type="button" onClick={() => setOpen(true)} className="mt-6 rounded-xl bg-zinc-950 px-5 py-3 text-sm font-bold text-white hover:bg-zinc-800">
+    Dodaj biografię
+  </button>;
+
   return <form action={action} className="mt-6 rounded-2xl border border-zinc-200 p-5">
-    <h2 className="text-xl font-black">{hasBiography ? "Zaproponuj nową biografię" : "Dodaj biografię"}</h2>
+    <div className="flex flex-wrap items-start justify-between gap-3">
+      <h2 className="text-xl font-black">{hasBiography ? "Zaproponuj nową biografię" : "Dodaj biografię"}</h2>
+      <button type="button" onClick={() => setOpen(false)} className="rounded-lg px-3 py-1 text-sm font-bold text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900">Zamknij</button>
+    </div>
     <p className="mt-2 text-sm text-zinc-500">Napisz własny, rzeczowy opis artysty. Po akceptacji administratora pod biografią pojawi się Twój nick.</p>
     <label className="mt-4 block text-sm font-bold">Treść biografii
       <textarea name="biography" minLength={80} maxLength={5000} required rows={7} disabled={state.success}

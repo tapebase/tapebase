@@ -40,9 +40,12 @@ export async function Header() {
     </div>
   </header>;
 }
-export function Artwork({ src, alt, className = "", priority = false }: { src: string | null; alt: string; className?: string; priority?: boolean }) {
-  return <div className={`relative aspect-square overflow-hidden rounded-lg bg-zinc-100 ${className}`}>
-    {src ? <Image src={src} alt={alt} fill unoptimized loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} className="object-contain" sizes="(max-width: 640px) 90vw, 320px" />
+export function Artwork({ src, alt, className = "", priority = false, variant = "default" }: {
+  src: string | null; alt: string; className?: string; priority?: boolean; variant?: "default" | "artistProfile";
+}) {
+  const artistProfile = variant === "artistProfile";
+  return <div className={`relative overflow-hidden ${artistProfile ? "h-56 w-56 shrink-0 self-start" : "aspect-square rounded-lg bg-zinc-100"} ${className}`}>
+    {src ? <Image src={src} alt={alt} fill unoptimized loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} className={artistProfile ? "object-cover" : "object-contain"} sizes={artistProfile ? "224px" : "(max-width: 640px) 90vw, 320px"} />
       : <div role="img" aria-label={alt} className="flex h-full items-center justify-center p-3 text-center text-sm text-zinc-500">Brak grafiki</div>}
   </div>;
 }

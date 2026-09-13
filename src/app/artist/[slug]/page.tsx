@@ -62,7 +62,7 @@ export default async function ArtistPage({ params, searchParams }: Props) {
     <Link href="/artist" className="mb-6 inline-block text-sm font-semibold hover:underline">← Wszyscy artyści</Link>
     <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <div className="flex flex-col gap-8 lg:flex-row">
-        <Artwork src={artist.image_url} alt={`Zdjęcie: ${artist.name || "artysta"}`} priority className="w-56 shrink-0" />
+        <Artwork src={artist.image_url} alt={`Zdjęcie: ${artist.name || "artysta"}`} priority variant="artistProfile" />
         <div className="min-w-0"><h1 className="break-words text-4xl font-black sm:text-5xl">{artist.name || "Artysta bez nazwy"}</h1><div className="mt-2 flex flex-wrap gap-2"><p className="inline-flex rounded-full bg-zinc-100 px-3 py-1 text-sm font-bold text-zinc-600">{countryLabel(artist.country_code)}</p>{!artist.catalog_visible && <p className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-800">Profil techniczny</p>}</div>
           {!artist.catalog_visible && <p className="mt-4 max-w-2xl text-sm text-zinc-600">Ten wykonawca pojawił się w creditach utworów. Jego pełny profil i dyskografia nie zostały jeszcze zaimportowane.</p>}
           <div className="mt-2 grid gap-4 xl:grid-cols-2">
