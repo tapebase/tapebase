@@ -41,17 +41,39 @@ function evidenceList(evidence: Record<string, unknown>) {
   return items.length ? items.join(" · ") : "Brak mocnych dowodów dopasowania";
 }
 
-export default async function AdminVideosPage() {
+const pageSize = 25;
+
+function pageNumber(value: string | string[] | undefined) {
+  const parsed = Number(Array.isArray(value) ? value[0] : value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function Pagination({ page, count, parameter, otherPage }: { page: number; count: number; parameter: "videosPage" | "channelsPage"; otherPage: number }) {
+  const pages = Math.max(1, Math.ceil(count / pageSize));
+  if (pages <= 1) return null;
+  const otherParameter = parameter === "videosPage" ? "channelsPage" : "videosPage";
+  const href = (target: number) => `/admin/teledyski?${parameter}=${target}&${otherParameter}=${otherPage}`;
+  return <nav aria-label="Stronicowanie" className="mt-6 flex items-center justify-between gap-4 border-t border-zinc-200 pt-5">
+    {page > 1 ? <Link href={href(page - 1)} className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-bold">Poprzednia</Link> : <span />}
+    <span className="text-sm text-zinc-500">Strona {page} z {pages} · {count} pozycji</span>
+    {page < pages ? <Link href={href(page + 1)} className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-bold">Następna</Link> : <span />}
+  </nav>;
+}
+
+export default async function AdminVideosPage({ searchParams }: { searchParams: Promise<{ videosPage?: string | string[]; channelsPage?: string | string[] }> }) {
   const viewer = await getViewer();
   if (!viewer) redirect("/login?next=%2Fadmin%2Fteledyski");
   if (viewer.role !== "admin") notFound();
+  const params = await searchParams;
+  const videosPage = pageNumber(params.videosPage);
+  const channelsPage = pageNumber(params.channelsPage);
   const client = await createClient();
   const today = new Date().toISOString().slice(0, 10);
   const [pendingVideos, pendingChannels, approvedCount, syncCount, usage, runs, artists] = await Promise.all([
-    client.from("artist_videos").select("artist_id,youtube_video_id,confidence_score,match_evidence,artist:artists!artist_videos_artist_id_fkey(id,name,slug),video:youtube_videos!artist_videos_youtube_video_id_fkey(title,thumbnail_url,channel_title,view_count,published_at)")
-      .eq("status", "pending").order("created_at").limit(100).returns<VideoCandidate[]>(),
-    client.from("artist_youtube_channels").select("artist_id,youtube_channel_id,confidence_score,match_method,artist:artists!artist_youtube_channels_artist_id_fkey(id,name,slug),channel:youtube_channels!artist_youtube_channels_youtube_channel_id_fkey(title,channel_type,thumbnail_url)")
-      .eq("status", "candidate").order("created_at").limit(100).returns<ChannelCandidate[]>(),
+    client.from("artist_videos").select("artist_id,youtube_video_id,confidence_score,match_evidence,artist:artists!artist_videos_artist_id_fkey(id,name,slug),video:youtube_videos!artist_videos_youtube_video_id_fkey(title,thumbnail_url,channel_title,view_count,published_at)", { count: "exact" })
+      .eq("status", "pending").order("created_at").range((videosPage - 1) * pageSize, videosPage * pageSize - 1).returns<VideoCandidate[]>(),
+    client.from("artist_youtube_channels").select("artist_id,youtube_channel_id,confidence_score,match_method,artist:artists!artist_youtube_channels_artist_id_fkey(id,name,slug),channel:youtube_channels!artist_youtube_channels_youtube_channel_id_fkey(title,channel_type,thumbnail_url)", { count: "exact" })
+      .eq("status", "candidate").order("created_at").range((channelsPage - 1) * pageSize, channelsPage * pageSize - 1).returns<ChannelCandidate[]>(),
     client.from("artist_videos").select("id", { count: "exact", head: true }).eq("status", "approved"),
     client.from("artist_youtube_sync").select("artist_id", { count: "exact", head: true }).in("status", ["pending", "failed"]),
     client.from("youtube_sync_daily_usage").select("search_calls").eq("usage_date", today).maybeSingle(),
@@ -73,7 +95,7 @@ export default async function AdminVideosPage() {
 
     <section className="my-6 grid gap-4 sm:grid-cols-4">
       <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-zinc-500">Zaakceptowane</p><strong className="mt-1 block text-3xl">{approvedCount.count ?? 0}</strong></div>
-      <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-zinc-500">Filmy do decyzji</p><strong className="mt-1 block text-3xl">{pendingVideos.data?.length ?? 0}</strong></div>
+      <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-zinc-500">Filmy do decyzji</p><strong className="mt-1 block text-3xl">{pendingVideos.count ?? 0}</strong></div>
       <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-zinc-500">Artyści w kolejce</p><strong className="mt-1 block text-3xl">{syncCount.count ?? 0}</strong></div>
       <div className="rounded-2xl bg-white p-5 shadow-sm"><p className="text-sm text-zinc-500">Wyszukiwania dzisiaj</p><strong className="mt-1 block text-3xl">{usage.data?.search_calls ?? 0} / 50</strong></div>
     </section>
@@ -101,7 +123,7 @@ export default async function AdminVideosPage() {
 
     <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <h2 className="text-2xl font-black">Kanały do weryfikacji</h2>
-      {pendingChannels.data?.length ? <div className="mt-5 space-y-4">{pendingChannels.data.map(item => <article key={`${item.artist_id}-${item.youtube_channel_id}`} className="rounded-2xl border border-zinc-200 p-5">
+      {pendingChannels.data?.length ? <><div className="mt-5 space-y-4">{pendingChannels.data.map(item => <article key={`${item.artist_id}-${item.youtube_channel_id}`} className="rounded-2xl border border-zinc-200 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div><h3 className="text-xl font-black">{item.channel?.title ?? item.youtube_channel_id}</h3><p className="mt-1 text-sm text-zinc-500">Dla: {item.artist?.name ?? `artysta ${item.artist_id}`} · {item.match_method} · pewność {Math.round(item.confidence_score * 100)}%</p></div>
           <a href={`https://www.youtube.com/channel/${item.youtube_channel_id}`} target="_blank" rel="noreferrer" className="text-sm font-bold underline">Otwórz kanał</a>
@@ -110,12 +132,12 @@ export default async function AdminVideosPage() {
           <form action={reviewYouTubeChannel}><input type="hidden" name="artistId" value={item.artist_id} /><input type="hidden" name="channelId" value={item.youtube_channel_id} /><button name="decision" value="verify" className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white">Zweryfikuj</button></form>
           <form action={reviewYouTubeChannel}><input type="hidden" name="artistId" value={item.artist_id} /><input type="hidden" name="channelId" value={item.youtube_channel_id} /><button name="decision" value="reject" className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-700">Odrzuć</button></form>
         </div>
-      </article>)}</div> : <p className="mt-5 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak kanałów oczekujących na decyzję.</p>}
+      </article>)}</div><Pagination page={channelsPage} count={pendingChannels.count ?? 0} parameter="channelsPage" otherPage={videosPage} /></> : <p className="mt-5 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak kanałów oczekujących na decyzję.</p>}
     </section>
 
     <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <h2 className="text-2xl font-black">Teledyski do weryfikacji</h2>
-      {pendingVideos.data?.length ? <div className="mt-5 space-y-5">{pendingVideos.data.map(item => <article key={`${item.artist_id}-${item.youtube_video_id}`} className="grid gap-5 rounded-2xl border border-zinc-200 p-5 md:grid-cols-[240px_1fr]">
+      {pendingVideos.data?.length ? <><div className="mt-5 space-y-5">{pendingVideos.data.map(item => <article key={`${item.artist_id}-${item.youtube_video_id}`} className="grid gap-5 rounded-2xl border border-zinc-200 p-5 md:grid-cols-[240px_1fr]">
         <a href={`https://www.youtube.com/watch?v=${item.youtube_video_id}`} target="_blank" rel="noreferrer" className="block aspect-video overflow-hidden rounded-xl bg-zinc-900">
           {item.video?.thumbnail_url && <img src={item.video.thumbnail_url} alt="" className="h-full w-full object-cover" />}
         </a>
@@ -130,7 +152,7 @@ export default async function AdminVideosPage() {
             <form action={reviewYouTubeVideo} className="flex flex-wrap gap-3"><input type="hidden" name="artistId" value={item.artist_id} /><input type="hidden" name="videoId" value={item.youtube_video_id} /><input required name="reason" placeholder="Powód odrzucenia" className="min-w-0 flex-1 rounded-xl border border-zinc-300 px-3 py-2 text-sm" /><button name="decision" value="reject" className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-700">Odrzuć</button></form>
           </div>
         </div>
-      </article>)}</div> : <p className="mt-5 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak teledysków oczekujących na decyzję.</p>}
+      </article>)}</div><Pagination page={videosPage} count={pendingVideos.count ?? 0} parameter="videosPage" otherPage={channelsPage} /></> : <p className="mt-5 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak teledysków oczekujących na decyzję.</p>}
     </section>
 
     <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">

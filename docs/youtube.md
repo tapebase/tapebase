@@ -25,7 +25,9 @@ a publiczna funkcja nie pokazuje danych starszych niż 30 dni.
 
 Kanał wskazany przez właściwość Wikidata P2397 zaakceptowanego rekordu artysty
 jest zaufany automatycznie. Kanały znalezione wyłącznie przez wyszukiwanie czekają
-na administratora. Film może zostać opublikowany automatycznie tylko wtedy, gdy
+na administratora, jeśli dopasowanie osiągnęło co najmniej 40% pewności. Słabsze
+dopasowanie filmu nadal pozostaje dostępne do niezależnej oceny. Film może zostać
+opublikowany automatycznie tylko wtedy, gdy
 pochodzi ze zweryfikowanego kanału, pasuje do utworu w katalogu i nie nosi cech
 audio, lyric video, visualizera, koncertu, wywiadu, reakcji ani materiału fanowskiego.
 

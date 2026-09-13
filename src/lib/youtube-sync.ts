@@ -181,7 +181,10 @@ async function saveVideoCandidates(
     if (match.rejected) continue;
 
     await saveChannel(database, { id: video.channelId, title: video.channelTitle });
-    if (!verified.has(video.channelId)) {
+    // Channel identity is reused across many videos, so only meaningful
+    // matches belong in its separate moderation queue. We still keep weaker
+    // video candidates for independent review.
+    if (!verified.has(video.channelId) && match.confidence >= 0.4) {
       await linkChannel(database, artist.id, video.channelId, "youtube_search", "candidate",
         match.confidence, { discoveredFromVideo: video.videoId, channelType: classifyChannel(video.channelTitle) });
     }
