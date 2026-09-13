@@ -215,12 +215,25 @@ export async function getArtist(slug: string) {
   return result.data;
 }
 export async function artistAlbums(artistId: number, page = 1): Promise<{ rows: Album[]; count: number }> {
-  const result = await catalogClient().from("album_artists")
-    .select(`album:albums(${albumFields})`, { count: "exact" }).eq("artist_id", artistId)
-    .order("album_id", { ascending: false }).range((page - 1) * pageSize, page * pageSize - 1)
-    .returns<{ album: Album | null }[]>();
-  if (result.error?.code === "PGRST103" && page > 1) return { rows: [] as Album[], count: (await artistAlbums(artistId, 1)).count };
-  return { rows: checked(result).flatMap(row => row.album ? [row.album] : []), count: result.count ?? 0 };
+  const client = catalogClient(), offset = (page - 1) * pageSize;
+  const idResult = await client.rpc("artist_album_ids", {
+    requested_artist_id: artistId, result_offset: offset, result_limit: pageSize,
+  }).returns<{ album_id: number; total_count: number }[]>();
+  const matches = checked(idResult as unknown as {
+    data: { album_id: number; total_count: number }[] | null;
+    error: unknown;
+  });
+  if (!matches.length) {
+    if (page > 1) return { rows: [], count: (await artistAlbums(artistId, 1)).count };
+    return { rows: [], count: 0 };
+  }
+  const albumResult = await client.from("albums").select(albumFields)
+    .in("id", matches.map(item => item.album_id)).returns<Album[]>();
+  const albums = checked(albumResult), byId = new Map(albums.map(album => [album.id, album]));
+  return {
+    rows: matches.flatMap(item => byId.get(item.album_id) ?? []),
+    count: Number(matches[0].total_count),
+  };
 }
 export async function artistTracks(artistId: number, page = 1): Promise<{ rows: Participation[]; count: number }> {
   const result = await catalogClient().from("spotify_track_artists")
