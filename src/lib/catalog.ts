@@ -13,6 +13,7 @@ export type Artist = {
   birth_place: string | null;
   enrichment_field_sources: Record<string, unknown> | null;
 };
+export type ArtistDetail = Artist & { biography_author: { username: string } | null };
 export type Credit = { position: number; artist: Artist | null };
 export type Album = {
   id: number; title: string; slug: string; spotify_id: string | null;
@@ -209,8 +210,9 @@ export async function getTracks(albumId: number) {
   }
 }
 export async function getArtist(slug: string) {
-  const query = catalogClient().from("artists").select(artistFields);
-  const result = await (/^\d{1,19}$/.test(slug) ? query.eq("id", slug) : query.eq("slug", slug)).maybeSingle<Artist>();
+  const query = catalogClient().from("artists")
+    .select(`${artistFields},biography_author:users!artists_biography_author_id_fkey(username)`);
+  const result = await (/^\d{1,19}$/.test(slug) ? query.eq("id", slug) : query.eq("slug", slug)).maybeSingle<ArtistDetail>();
   if (result.error) throw new Error("Nie udało się pobrać artysty.");
   return result.data;
 }

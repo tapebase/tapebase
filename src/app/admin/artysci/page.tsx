@@ -4,6 +4,7 @@ import { AdminTabs } from "@/components/admin-tabs";
 import { getViewer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { reviewArtistEnrichmentAction, runArtistEnrichmentAction } from "./actions";
+import { ArtistBiographyModeration, type BiographySubmission } from "@/components/artist-biography-moderation";
 
 export const metadata = { title: "Dane artystów" };
 
@@ -32,13 +33,16 @@ export default async function AdminArtistsPage() {
   if (!viewer) redirect("/login?next=%2Fadmin%2Fartysci");
   if (viewer.role !== "admin") notFound();
   const client = await createClient();
-  const [artistsResult, candidatesResult] = await Promise.all([
+  const [artistsResult, candidatesResult, biographiesResult] = await Promise.all([
     client.from("artists").select("enrichment_status").eq("catalog_visible", true),
     client.from("artist_enrichment_candidates")
       .select("id,source,source_id,source_url,confidence,candidate_data,match_evidence,artist:artists!artist_enrichment_candidates_artist_id_fkey(id,name,slug,spotify_id)")
       .eq("status", "pending").order("created_at").limit(100).returns<Candidate[]>(),
+    client.from("artist_biography_submissions")
+      .select("id,content,created_at,artist:artists!artist_biography_submissions_artist_id_fkey(name,slug),author:users!artist_biography_submissions_user_id_fkey(username)")
+      .eq("status", "pending").order("created_at").limit(100).returns<BiographySubmission[]>(),
   ]);
-  if (artistsResult.error || candidatesResult.error) throw new Error("Nie udało się pobrać stanu danych artystów.");
+  if (artistsResult.error || candidatesResult.error || biographiesResult.error) throw new Error("Nie udało się pobrać stanu danych artystów.");
   const statuses = new Map<string, number>();
   for (const row of artistsResult.data ?? []) statuses.set(row.enrichment_status, (statuses.get(row.enrichment_status) ?? 0) + 1);
   const candidates = candidatesResult.data ?? [];
@@ -90,5 +94,6 @@ export default async function AdminArtistsPage() {
         </div>
       </article>)}</div> : <p className="mt-6 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak kandydatów oczekujących na weryfikację.</p>}
     </section>
+    <ArtistBiographyModeration submissions={biographiesResult.data ?? []} />
   </main>;
 }

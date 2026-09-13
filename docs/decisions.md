@@ -214,3 +214,15 @@
   pełnego artysty przypisanego do albumu przez `album_artists`.
 - Techniczny profil współwykonawcy nie rozszerza wyników wyszukiwania, dopóki artysta
   nie zostanie oficjalnie dodany do katalogu.
+
+## Biografie społecznościowe (2026-09-13)
+
+- Zalogowany użytkownik może zaproponować biografię wyłącznie dla pełnego profilu
+  katalogowego. Propozycja nie zmienia publicznego profilu przed moderacją.
+- Administrator akceptuje albo odrzuca tekst w prywatnej kolejce „Dane artystów”.
+  Odrzucenie wymaga powodu, a każda decyzja pozostaje zapisana przy zgłoszeniu.
+- Po akceptacji profil pokazuje nick autora pod biografią. Późniejsza zmiana nazwy
+  użytkownika jest od razu widoczna, ponieważ zapisujemy jego identyfikator, a nie
+  kopię nicku.
+- Licznik profilu obejmuje wszystkie biografie zaakceptowane w historii, także te,
+  które zostały później zastąpione lepszą wersją.

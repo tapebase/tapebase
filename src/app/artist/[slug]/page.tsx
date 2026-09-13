@@ -9,6 +9,7 @@ import { ArtistRatingPanel, RatingStars } from "@/components/community-controls"
 import { ArtistConcerts } from "@/components/artist-concerts";
 import { getArtistConcerts } from "@/lib/concerts";
 import { countryLabel } from "@/lib/countries";
+import { ArtistBiographyForm } from "@/components/artist-biography-form";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 const birthDateFormat = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -90,7 +91,13 @@ export default async function ArtistPage({ params, searchParams }: Props) {
             <div><dt className="font-bold text-zinc-500">Data urodzenia</dt><dd className="mt-1 font-semibold">{displayedBirthDate(artist.birth_date, artist.birth_date_precision)}</dd></div>
             <div><dt className="font-bold text-zinc-500">Miejsce urodzenia</dt><dd className="mt-1 font-semibold">{birthLocation}</dd></div>
           </dl>}
-          {artist.description && !artist.enrichment_field_sources?.description && <p className="mt-6 max-w-3xl whitespace-pre-line text-zinc-600">{artist.description}</p>}
+          {artist.description && !artist.enrichment_field_sources?.description && <div className="mt-6 max-w-3xl">
+            <p className="whitespace-pre-line text-zinc-600">{artist.description}</p>
+            {artist.biography_author && <p className="mt-3 text-sm text-zinc-500">Dodane przez <Link href={`/u/${encodeURIComponent(artist.biography_author.username)}`} className="font-bold text-zinc-700 hover:underline">@{artist.biography_author.username}</Link></p>}
+          </div>}
+          {artist.catalog_visible && (viewer
+            ? <ArtistBiographyForm artistId={artist.id} hasBiography={Boolean(artist.description && !artist.enrichment_field_sources?.description)} />
+            : <p className="mt-6 rounded-2xl border border-zinc-200 p-4 text-sm text-zinc-600"><Link href={`/login?next=${encodeURIComponent(returnPath)}`} className="font-bold underline">Zaloguj się</Link>, aby zaproponować biografię artysty.</p>)}
         </div>
       </div>
     </section>

@@ -60,6 +60,7 @@ export type PublicProfileActivity = {
   commentCount: number;
   listenedCount: number;
   addedAlbumCount: number;
+  addedBiographyCount: number;
   averageRating: number | null;
 };
 
@@ -77,7 +78,7 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
   if (!profileResult.data) return null;
   const profile = profileResult.data;
   const client = catalogClient();
-  const [albumRatingsResult, artistRatingsResult, commentsResult, listenedResult, addedAlbumsResult] = await Promise.all([
+  const [albumRatingsResult, artistRatingsResult, commentsResult, listenedResult, addedAlbumsResult, addedBiographiesResult] = await Promise.all([
     client.from("ratings")
       .select("rating,updated_at,albums(id,title,slug,cover_url)", { count: "exact" })
       .eq("user_id", profile.id).order("updated_at", { ascending: false }),
@@ -91,8 +92,9 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
       .select("created_at,albums(id,title,slug,cover_url)", { count: "exact" })
       .eq("user_id", profile.id).order("created_at", { ascending: false }).limit(100),
     client.rpc("imported_album_count", { profile_id: profile.id }),
+    client.rpc("accepted_biography_count", { profile_id: profile.id }),
   ]);
-  if (albumRatingsResult.error || artistRatingsResult.error || commentsResult.error || listenedResult.error || addedAlbumsResult.error) {
+  if (albumRatingsResult.error || artistRatingsResult.error || commentsResult.error || listenedResult.error || addedAlbumsResult.error || addedBiographiesResult.error) {
     throw new Error("Nie udało się pobrać aktywności użytkownika.");
   }
 
@@ -124,6 +126,7 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
     commentCount: commentsResult.count ?? comments.length,
     listenedCount: listenedResult.count ?? listened.length,
     addedAlbumCount: Number(addedAlbumsResult.data ?? 0),
+    addedBiographyCount: Number(addedBiographiesResult.data ?? 0),
     averageRating: ratingValues.length ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length : null,
   };
 }

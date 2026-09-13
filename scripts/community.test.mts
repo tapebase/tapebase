@@ -26,6 +26,8 @@ const artistCountriesMigration = await readFile(new URL("../supabase/migrations/
 const artistVisibilityMigration = await readFile(new URL("../supabase/migrations/202609110019_artist_catalog_visibility.sql", import.meta.url), "utf8");
 const albumGenresMigration = await readFile(new URL("../supabase/migrations/202609110020_album_genres.sql", import.meta.url), "utf8");
 const activeUsersMigration = await readFile(new URL("../supabase/migrations/202609110021_active_users_leaderboard.sql", import.meta.url), "utf8");
+const artistEnrichmentMigration = await readFile(new URL("../supabase/migrations/202609130022_artist_enrichment.sql", import.meta.url), "utf8");
+const artistBiographiesMigration = await readFile(new URL("../supabase/migrations/202609130025_artist_biographies.sql", import.meta.url), "utf8");
 const draftSchema = `
   create role anon;
   create role authenticated;
@@ -114,7 +116,7 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(artistRatingsMigration);
     await db.exec(publicProfilesMigration);
     await db.exec(commentThreadsMigration);
-    await db.exec("alter table public.artists add column spotify_id text; alter table public.albums add column spotify_id text;");
+    await db.exec("alter table public.artists add column spotify_id text, add column description text, add column updated_at timestamptz default now(); alter table public.albums add column spotify_id text;");
     await db.exec(catalogSubmissionsMigration);
     await db.exec(profileSubmissionStatsMigration);
     const columns = await db.query<{ table_name: string; column_name: string; data_type: string }>(`
@@ -160,8 +162,30 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(artistVisibilityMigration);
     await db.exec(albumGenresMigration);
     await db.exec(activeUsersMigration);
+    await db.exec(artistEnrichmentMigration);
+    await db.exec(artistBiographiesMigration);
     assert.deepEqual((await db.query("select distinct country_code from public.artists")).rows, [{ country_code: "PL" }]);
     assert.deepEqual((await db.query("select distinct genre from public.albums")).rows, [{ genre: "rap" }]);
+
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [alice]);
+    await db.exec("set role authenticated");
+    const biography = "Polski artysta związany ze sceną hip-hopową. Rozwija własną dyskografię, współpracuje z innymi wykonawcami i regularnie publikuje nowe nagrania.";
+    const biographySubmission = await db.query<{ submit_artist_biography: bigint }>(
+      "select public.submit_artist_biography(1,$1)", [biography],
+    );
+    await db.exec("reset role");
+    await db.query("update public.users set role='admin' where id=$1", [bob]);
+    await db.query("select set_config('request.jwt.claim.sub',$1,false)", [bob]);
+    await db.exec("set role authenticated");
+    await db.query("select public.moderate_artist_biography($1,'approve',null)", [biographySubmission.rows[0].submit_artist_biography]);
+    await db.exec("reset role");
+    assert.deepEqual((await db.query("select description,biography_author_id::text from public.artists where id=1")).rows, [
+      { description: biography, biography_author_id: alice },
+    ]);
+    await db.exec("set role anon");
+    assert.equal((await db.query<{ count: string }>("select public.accepted_biography_count($1)::text as count", [alice])).rows[0].count, "1");
+    await db.exec("reset role");
+    await db.query("update public.users set role='user' where id=$1", [bob]);
     const leaderboard = await db.query<{ username: string; activity_score: bigint }>(
       "select username, activity_score from public.community_user_leaderboard(30, 5)",
     );

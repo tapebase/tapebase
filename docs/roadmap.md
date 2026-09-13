@@ -11,6 +11,7 @@
 * [x] Artist page (wydawnictwa i utwory z udziałem)
 * [x] Rankings page (TOP artyści i TOP albumy)
 * [x] User profile page (edycja, avatar, aktywność i profil publiczny)
+* [x] Biografie artystów zgłaszane przez użytkowników, moderowane i podpisane nickiem autora
 
 ---
 

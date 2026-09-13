@@ -109,6 +109,8 @@ Pola:
 * enrichment_checked_at
 * enrichment_error
 * enrichment_field_sources
+* biography_author_id
+* biography_updated_at
 * created_at
 * updated_at
 
@@ -134,12 +136,30 @@ każdego zapisanego pola, dzięki czemu ponowne uruchomienie nie zastępuje dany
 redakcyjnych. Identyfikator i adres zaakceptowanego rekordu źródłowego pozostają
 widoczne w `enrichment_source_id` oraz `enrichment_source_url`.
 
+Zaakceptowana biografia użytkownika trafia do istniejącego pola `description`.
+`biography_author_id` wskazuje autora widocznego pod tekstem, a akceptacja usuwa
+oznaczenie automatycznego źródła opisu z `enrichment_field_sources`, dzięki czemu
+tekst społecznościowy jest wyświetlany jako treść redakcyjna.
+
 ## artist_enrichment_candidates
 
 Kandydaci znalezieni bez bezpiecznego identyfikatora trafiają do prywatnej kolejki
 administratora. Rekord przechowuje źródło, QID lub MBID, podgląd danych, dowody
 dopasowania, poziom pewności oraz decyzję moderatora. RLS nie udostępnia kolejki
 anonimowym ani zwykłym zalogowanym użytkownikom.
+
+## artist_biography_submissions
+
+Prywatna kolejka propozycji biografii artystów. Użytkownik może wysłać tekst o
+długości 80–5000 znaków i aktualizować własne oczekujące zgłoszenie. Limit wynosi
+5 nowych propozycji w ciągu 24 godzin. Zwykły użytkownik widzi tylko własne wpisy,
+a administrator całą kolejkę.
+
+Akceptacja atomowo publikuje biografię w `artists.description`, przypisuje autora
+i oznacza poprzednio zaakceptowaną wersję jako `superseded`. Odrzucenie wymaga
+powodu. Funkcja `accepted_biography_count` udostępnia na profilach wyłącznie liczbę
+biografii danego użytkownika, które zostały zaakceptowane; obejmuje również wersje
+później zastąpione nowszą biografią.
 
 ---
 

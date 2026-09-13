@@ -24,12 +24,13 @@ export function ProfileHero({ activity, email, own = false }: { activity: Public
         {own && <div className="mt-4 flex flex-wrap gap-3"><Link href="/zglos" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white">Zgłoś album / artystę</Link><Link href={`/u/${profile.username}`} className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold">Zobacz profil publiczny →</Link></div>}
       </div>
     </div>
-    <dl className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <dl className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
       <div className="rounded-2xl bg-zinc-50 p-4"><dt className="text-sm text-zinc-500">Średnia ocen</dt><dd className="mt-1 text-3xl font-black">{activity.averageRating === null ? "—" : activity.averageRating.toFixed(1)}</dd></div>
       <div className="rounded-2xl bg-zinc-50 p-4"><dt className="text-sm text-zinc-500">Liczba ocen</dt><dd className="mt-1 text-3xl font-black">{activity.ratingCount}</dd></div>
       <div className="rounded-2xl bg-zinc-50 p-4"><dt className="text-sm text-zinc-500">Przesłuchane</dt><dd className="mt-1 text-3xl font-black">{activity.listenedCount}</dd></div>
       <div className="rounded-2xl bg-zinc-50 p-4"><dt className="text-sm text-zinc-500">Komentarze</dt><dd className="mt-1 text-3xl font-black">{activity.commentCount}</dd></div>
       <div className="rounded-2xl bg-zinc-50 p-4"><dt className="text-sm text-zinc-500">Dodane albumy</dt><dd className="mt-1 text-3xl font-black">{activity.addedAlbumCount}</dd></div>
+      <div className="rounded-2xl bg-zinc-50 p-4"><dt className="text-sm text-zinc-500">Dodane biografie</dt><dd className="mt-1 text-3xl font-black">{activity.addedBiographyCount}</dd></div>
     </dl>
   </section>;
 }
