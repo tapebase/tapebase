@@ -22,6 +22,7 @@ export type PublishedBiography = {
   name: string | null;
   slug: string | null;
   description: string;
+  biography_updated_at: string | null;
   biography_author: { username: string } | null;
 };
 
@@ -67,13 +68,17 @@ function BiographyCard({ submission }: { submission: BiographySubmission }) {
   </article>;
 }
 
-export function ArtistBiographyModeration({ submissions }: { submissions: BiographySubmission[] }) {
+export function ArtistBiographyModeration({ submissions, total, onMore }: {
+  submissions: BiographySubmission[]; total?: number; onMore?: () => void;
+}) {
+  const resultCount = total ?? submissions.length;
   return <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
     <h2 className="text-2xl font-black">Biografie od użytkowników</h2>
     <p className="mt-2 text-sm text-zinc-500">Akceptacja publikuje tekst na profilu artysty i podpisuje go nickiem autora.</p>
     {submissions.length
       ? <div className="mt-6 space-y-4">{submissions.map(item => <BiographyCard key={item.id} submission={item} />)}</div>
       : <p className="mt-6 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak biografii oczekujących na akceptację.</p>}
+    {onMore && submissions.length < resultCount && <button type="button" onClick={onMore} className="mt-5 rounded-xl border border-zinc-300 px-4 py-2 text-sm font-bold hover:bg-zinc-100">Pokaż kolejne 10</button>}
   </section>;
 }
 
@@ -110,12 +115,70 @@ function PublishedBiographyCard({ biography }: { biography: PublishedBiography }
   </article>;
 }
 
-export function PublishedArtistBiographies({ biographies }: { biographies: PublishedBiography[] }) {
+export function PublishedArtistBiographies({ biographies, total, onMore }: {
+  biographies: PublishedBiography[]; total?: number; onMore?: () => void;
+}) {
+  const resultCount = total ?? biographies.length;
   return <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
     <h2 className="text-2xl font-black">Opublikowane biografie</h2>
     <p className="mt-2 text-sm text-zinc-500">Usunięcie czyści tekst i podpis autora z publicznego profilu. Decyzja pozostaje w historii moderacji.</p>
     {biographies.length
       ? <div className="mt-6 space-y-4">{biographies.map(item => <PublishedBiographyCard key={item.id} biography={item} />)}</div>
       : <p className="mt-6 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak opublikowanych biografii.</p>}
+    {onMore && biographies.length < resultCount && <button type="button" onClick={onMore} className="mt-5 rounded-xl border border-zinc-300 px-4 py-2 text-sm font-bold hover:bg-zinc-100">Pokaż kolejne 10</button>}
   </section>;
+}
+
+function normalizedText(value: string) {
+  return value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase("pl");
+}
+
+function searchableText(...values: Array<string | null | undefined>) {
+  return normalizedText(values.filter(Boolean).join(" "));
+}
+
+export function BiographyAdminBrowser({ submissions, biographies }: {
+  submissions: BiographySubmission[]; biographies: PublishedBiography[];
+}) {
+  const [query, setQuery] = useState("");
+  const [pendingVisible, setPendingVisible] = useState(10);
+  const [publishedVisible, setPublishedVisible] = useState(10);
+  const normalized = normalizedText(query.trim());
+  const matchingSubmissions = submissions.filter(item => !normalized || searchableText(
+    item.artist?.name,
+    item.author?.username,
+    item.content,
+  ).includes(normalized));
+  const matchingBiographies = biographies.filter(item => !normalized || searchableText(
+    item.name,
+    item.biography_author?.username,
+    item.description,
+  ).includes(normalized));
+
+  return <>
+    <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+      <label className="block text-sm font-bold">Wyszukaj biografię
+        <input type="search" value={query} onChange={event => {
+          setQuery(event.target.value);
+          setPendingVisible(10);
+          setPublishedVisible(10);
+        }} placeholder="Artysta, autor lub fragment biografii…" className="mt-2 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 font-normal" />
+      </label>
+      <p className="mt-2 text-xs text-zinc-500">Znaleziono: {matchingSubmissions.length} oczekujących i {matchingBiographies.length} opublikowanych.</p>
+    </section>
+    <div className="mt-6">
+      <ArtistBiographyModeration
+        submissions={matchingSubmissions.slice(0, pendingVisible)}
+        total={matchingSubmissions.length}
+        onMore={() => setPendingVisible(value => value + 10)}
+      />
+    </div>
+    <div className="mt-6">
+      <PublishedArtistBiographies
+        biographies={matchingBiographies.slice(0, publishedVisible)}
+        total={matchingBiographies.length}
+        onMore={() => setPublishedVisible(value => value + 10)}
+      />
+    </div>
+  </>;
 }

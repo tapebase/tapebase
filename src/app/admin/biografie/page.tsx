@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AdminTabs } from "@/components/admin-tabs";
 import {
-  ArtistBiographyModeration,
-  PublishedArtistBiographies,
+  BiographyAdminBrowser,
   type BiographySubmission,
   type PublishedBiography,
 } from "@/components/artist-biography-moderation";
@@ -21,13 +20,13 @@ export default async function AdminBiographiesPage() {
     client.from("artist_biography_submissions")
       .select("id,content,created_at,artist:artists!artist_biography_submissions_artist_id_fkey(name,slug,description,enrichment_field_sources),author:users!artist_biography_submissions_user_id_fkey(username)")
       .eq("status", "pending")
-      .order("created_at")
-      .limit(100)
+      .order("created_at", { ascending: false })
+      .limit(500)
       .returns<BiographySubmission[]>(),
     client.from("artists")
-      .select("id,name,slug,description,enrichment_field_sources,biography_author:users!artists_biography_author_id_fkey(username)")
+      .select("id,name,slug,description,biography_updated_at,enrichment_field_sources,biography_author:users!artists_biography_author_id_fkey(username)")
       .not("description", "is", null)
-      .order("name")
+      .order("biography_updated_at", { ascending: false, nullsFirst: false })
       .limit(500),
   ]);
   if (submissionsResult.error || publishedResult.error) throw new Error("Nie udało się pobrać biografii.");
@@ -38,6 +37,7 @@ export default async function AdminBiographiesPage() {
         name: item.name,
         slug: item.slug,
         description: item.description,
+        biography_updated_at: item.biography_updated_at,
         biography_author: Array.isArray(item.biography_author) ? item.biography_author[0] ?? null : item.biography_author,
       } satisfies PublishedBiography]
       : []
@@ -51,10 +51,7 @@ export default async function AdminBiographiesPage() {
       <AdminTabs active="biographies" />
     </header>
     <div className="mt-6">
-      <ArtistBiographyModeration submissions={submissionsResult.data ?? []} />
-    </div>
-    <div className="mt-6">
-      <PublishedArtistBiographies biographies={published} />
+      <BiographyAdminBrowser submissions={submissionsResult.data ?? []} biographies={published} />
     </div>
   </main>;
 }
