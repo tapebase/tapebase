@@ -1,5 +1,13 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+TAPEBASE: konfiguracja i lokalny podgląd importu Spotify są opisane w
+[docs/spotify-import.md](docs/spotify-import.md). Narzędzia wymagają Node.js 24.
+`spotify:preview` przygotowuje podgląd; `spotify:import` zapisuje do Supabase
+wyłącznie z opcją `--write`, po wdrożeniu migracji i skonfigurowaniu klucza backendu.
+
+Widoki korzystają z prawdziwych danych Supabase: albumy, artyści, tracklisty,
+wyszukiwanie i paginacja. Opis tras i weryfikacji: [docs/catalog-ui.md](docs/catalog-ui.md).
+
 ## Getting Started
 
 First, run the development server:

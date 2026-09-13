@@ -6,20 +6,33 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "spotify:preview": "node --env-file-if-exists=.env.local scripts/spotify-preview.mts",
+    "spotify:import": "node --env-file-if-exists=.env.local scripts/spotify-import.mts",
+    "supabase:inspect": "node --env-file-if-exists=.env.local scripts/supabase-inspect.mts",
+    "test:spotify": "node --test scripts/spotify/*.test.mts",
+    "test:catalog": "node --test scripts/catalog-format.test.mts",
+    "test:community": "node --test scripts/community.test.mts",
+    "test:submissions": "node --test scripts/catalog-submission.test.mts",
+    "test:moderation": "node --test scripts/submission-moderation.test.mts",
+    "test:concerts": "node --test scripts/ticketmaster.test.mts",
+    "check:catalog": "node scripts/catalog-smoke.mts"
   },
   "dependencies": {
-    "next": "16.2.9",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.108.2",
+    "next": "^16.3.4",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "^16.3.4",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

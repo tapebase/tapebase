@@ -1,113 +1,70 @@
-const topAlbums = [
-  { title: "Kinematografia", artist: "Paktofonika", rating: "9.4", year: "2000" },
-  { title: "Tabasko", artist: "O.S.T.R.", rating: "9.2", year: "2002" },
-  { title: "Ezoteryka", artist: "Quebonafide", rating: "9.1", year: "2015" },
-  { title: "Marmur", artist: "Taco Hemingway", rating: "8.8", year: "2016" },
-];
+import Link from "next/link";
+import { listAlbums, listArtists, mostRatedRecently, searchText, type SearchParams } from "@/lib/catalog";
+import { AlbumCard, ArtistCard, Artwork, Empty, SearchForm } from "@/components/catalog";
+import { LatestComments } from "@/components/latest-comments";
+import { albumPath } from "@/lib/catalog-format";
+import { getLatestComments } from "@/lib/community";
+import { getMostActiveUsers } from "@/lib/community-leaderboard";
+import { ActiveUsers } from "@/components/active-users";
 
-const recentAlbums = [
-  { title: "Album testowy", artist: "Artysta testowy", year: "2026" },
-  { title: "Nowa EP-ka", artist: "Raper X", year: "2026" },
-  { title: "Mixtape jako album", artist: "Producent Y", year: "2025" },
-];
-
-export default function Home() {
-  return (
-    <main className="min-h-screen bg-[#f6f4ef] text-zinc-950">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <div className="text-2xl font-black tracking-tight">TAPEBASE</div>
-
-          <nav className="hidden items-center gap-8 text-sm font-medium text-zinc-700 md:flex">
-            <a href="#">Albumy</a>
-            <a href="#">Rankingi</a>
-            <a href="#">Artyści</a>
-            <a href="#">Ostatnio dodane</a>
-            <a href="#">Społeczność</a>
-          </nav>
-
-          <button className="rounded-full bg-zinc-950 px-5 py-2 text-sm font-semibold text-white">
-            Logowanie
-          </button>
+export default async function Home({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const q = searchText((await searchParams).q);
+  const [albums, artists, recentlyRated, latestComments, activeUsers] = await Promise.all([
+    listAlbums(q, 1, 6),
+    q ? listArtists(q, 1, 6) : Promise.resolve(null),
+    q ? Promise.resolve([]) : mostRatedRecently(10),
+    q ? Promise.resolve([]) : getLatestComments(6),
+    q ? Promise.resolve([]) : getMostActiveUsers(10, 30),
+  ]);
+  return <main>
+    <section className="mx-auto max-w-7xl px-6 py-12">
+      <div className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+        <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">Oceniaj i odkrywaj albumy. Twórz własny i globalny ranking.</h1>
+        <p className="mt-5 text-lg text-zinc-600">Album jest głównym bohaterem.</p>
+        <SearchForm action="/" query={q} label="Szukaj albumu lub artysty…" />
+      </div>
+    </section>
+    {!q && <section className="mx-auto max-w-7xl px-6 pb-8" aria-labelledby="recently-rated-heading">
+      <div className="rounded-3xl bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="recently-rated-heading" className="text-2xl font-black">Najczęściej oceniane ostatnio</h2>
+            <p className="mt-1 text-sm text-zinc-500">Aktywność z ostatnich 7 dni</p>
+          </div>
+          <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Top 10</span>
         </div>
-      </header>
-
-      <section className="mx-auto max-w-7xl px-6 py-12">
-        <div className="rounded-3xl bg-white p-8 shadow-sm">
-          <p className="mb-3 text-sm font-bold uppercase tracking-widest text-zinc-500">
-            Polska baza ocen albumów
-          </p>
-
-          <h1 className="max-w-3xl text-5xl font-black tracking-tight">
-            Oceniaj albumy. Odkrywaj klasyki. Twórz ranking polskiego rapu.
-          </h1>
-
-          <p className="mt-5 max-w-2xl text-lg text-zinc-600">
-            TAPEBASE to społecznościowa baza albumów inspirowana Filmwebem.
-            Album jest głównym bohaterem.
-          </p>
-
-          <div className="mt-8 flex max-w-2xl gap-3">
-            <input
-              className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-5 py-4 outline-none"
-              placeholder="Szukaj albumu lub artysty..."
-            />
-            <button className="rounded-2xl bg-zinc-950 px-6 py-4 font-bold text-white">
-              Szukaj
-            </button>
-          </div>
+        {recentlyRated.length ? <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {recentlyRated.map((album, index) => <li key={album.id} className="relative rounded-2xl border border-zinc-100 p-4">
+            <span className="absolute left-2 top-2 z-10 flex h-8 min-w-8 items-center justify-center rounded-full bg-zinc-950 px-2 text-sm font-black text-white shadow">{index + 1}</span>
+            <Link href={albumPath(album)} aria-label={`Album: ${album.title}`}>
+              <Artwork src={album.cover_url} alt={`Okładka albumu ${album.title}`} />
+              <h3 className="mt-4 truncate font-black hover:underline">{album.title}</h3>
+            </Link>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-bold text-amber-600">★ {album.average.toFixed(1)}</p>
+              <p className="text-xs text-zinc-500">{album.recentRatingCount} {album.recentRatingCount === 1 ? "ocena" : "ocen"} w 7 dni</p>
+            </div>
+          </li>)}
+        </ol> : <p className="mt-5 rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-600">W ostatnich 7 dniach nie dodano jeszcze żadnej oceny.</p>}
+      </div>
+    </section>}
+    <section id="ostatnio-dodane" className="mx-auto max-w-7xl px-6 pb-16">
+      <div className="min-w-0 rounded-3xl bg-white p-6 shadow-sm">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-2xl font-black">{q ? `Albumy: ${q}` : "Ostatnio dodane"}</h2>
+          <Link href={`/album${q ? `?q=${encodeURIComponent(q)}` : ""}`} className="text-sm font-semibold underline">Wszystkie albumy ({albums.count})</Link>
         </div>
-      </section>
-
-      <section className="mx-auto grid max-w-7xl gap-6 px-6 pb-16 lg:grid-cols-[2fr_1fr]">
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-2xl font-black">Top albumy</h2>
-            <a href="#" className="text-sm font-semibold text-zinc-500">
-              Zobacz ranking
-            </a>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {topAlbums.map((album, index) => (
-              <div
-                key={album.title}
-                className="flex gap-4 rounded-2xl border border-zinc-100 p-4"
-              >
-                <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-zinc-200 text-xl font-black">
-                  {index + 1}
-                </div>
-
-                <div>
-                  <h3 className="font-bold">{album.title}</h3>
-                  <p className="text-sm text-zinc-500">
-                    {album.artist} • {album.year}
-                  </p>
-                  <p className="mt-3 text-lg font-black">
-                    {album.rating}
-                    <span className="text-sm text-zinc-400"> / 10</span>
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <aside className="rounded-3xl bg-white p-6 shadow-sm">
-          <h2 className="mb-6 text-2xl font-black">Ostatnio dodane</h2>
-
-          <div className="space-y-4">
-            {recentAlbums.map((album) => (
-              <div key={album.title} className="border-b border-zinc-100 pb-4">
-                <h3 className="font-bold">{album.title}</h3>
-                <p className="text-sm text-zinc-500">
-                  {album.artist} • {album.year}
-                </p>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </section>
-    </main>
-  );
+        {albums.rows.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{albums.rows.map(album => <AlbumCard key={album.id} album={album} />)}</div>
+          : <Empty>{q ? "Nie znaleziono albumów pasujących do zapytania." : "Nie ma jeszcze albumów w katalogu."}</Empty>}
+        {artists && <div className="mt-8">
+          <h2 className="mb-4 text-2xl font-black">Artyści: {q}</h2>
+          {artists.rows.length ? <div className="grid gap-4 sm:grid-cols-2">{artists.rows.map(artist => <ArtistCard key={artist.id} artist={artist} />)}</div>
+            : <Empty>Nie znaleziono artystów pasujących do zapytania.</Empty>}
+          <Link href={`/artist?q=${encodeURIComponent(q)}`} className="mt-5 inline-block text-sm font-semibold underline">Wszyscy pasujący artyści ({artists.count})</Link>
+        </div>}
+      </div>
+    </section>
+    {!q && <ActiveUsers users={activeUsers} />}
+    {!q && <LatestComments comments={latestComments} />}
+  </main>;
 }

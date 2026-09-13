@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f4ef;
+  --foreground: #09090b;
+}
+
+html.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
 }
 
 @theme inline {
@@ -12,15 +17,52 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid #52525b;
+  outline-offset: 4px;
+}
+
+html.dark :focus-visible {
+  outline-color: #d4d4d8;
+}
+
+html.dark body,
+html.dark .bg-\[\#f6f4ef\] {
+  background-color: #09090b;
+  color: #fafafa;
+}
+
+html.dark .bg-white { background-color: #18181b; }
+html.dark .bg-zinc-50 { background-color: #27272a; }
+html.dark .bg-zinc-100 { background-color: #3f3f46; }
+html.dark .bg-zinc-950 { background-color: #f4f4f5; color: #18181b; }
+html.dark .text-zinc-950 { color: #fafafa; }
+html.dark .text-zinc-700 { color: #d4d4d8; }
+html.dark .text-zinc-600 { color: #a1a1aa; }
+html.dark .text-zinc-500 { color: #a1a1aa; }
+html.dark .text-zinc-400 { color: #71717a; }
+html.dark .border-zinc-100 { border-color: #27272a; }
+html.dark .border-zinc-200 { border-color: #3f3f46; }
+html.dark .border-zinc-300 { border-color: #52525b; }
+html.dark .bg-emerald-50 { background-color: #052e16; }
+html.dark .text-emerald-800 { color: #86efac; }
+html.dark .bg-amber-50 { background-color: #422006; }
+html.dark .text-amber-800 { color: #fde68a; }
+html.dark .bg-red-50 { background-color: #450a0a; }
+html.dark .text-red-700 { color: #fca5a5; }
+html.dark .bg-blue-50 { background-color: #172554; }
+html.dark .text-blue-800 { color: #bfdbfe; }
+html.dark .bg-pink-50 { background-color: #500724; }
+html.dark .text-pink-800 { color: #fbcfe8; }
+
+html.dark input,
+html.dark textarea {
+  color: #fafafa;
+  caret-color: #fafafa;
 }

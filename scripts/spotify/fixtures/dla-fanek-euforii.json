@@ -1,0 +1,232 @@
+{
+  "mode": "preview-only",
+  "schema_version": 1,
+  "plan": {
+    "artists": [
+      {
+        "spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "name": "Quebonafide",
+        "spotify_url": "https://open.spotify.com/artist/1fxbULcd6ryMNc1usHoP0R",
+        "slug": "quebonafide-1fxbULcd6ryMNc1usHoP0R",
+        "image_url": "https://i.scdn.co/image/ab6761610000e5eb2e9c6d4d26bdb6f5e7b251e0"
+      },
+      {
+        "spotify_id": "1MZ1TtfmzMHEYIlynXsr1a",
+        "name": "Gedz",
+        "spotify_url": "https://open.spotify.com/artist/1MZ1TtfmzMHEYIlynXsr1a",
+        "slug": "gedz-1MZ1TtfmzMHEYIlynXsr1a"
+      },
+      {
+        "spotify_id": "4TUfkQYmi7lao7Ghwu6hsA",
+        "name": "PlanBe & Szopeen",
+        "spotify_url": "https://open.spotify.com/artist/4TUfkQYmi7lao7Ghwu6hsA",
+        "slug": "planbe-szopeen-4TUfkQYmi7lao7Ghwu6hsA"
+      },
+      {
+        "spotify_id": "3gm9b6AeMf2eGQTLashkDt",
+        "name": "Deemz",
+        "spotify_url": "https://open.spotify.com/artist/3gm9b6AeMf2eGQTLashkDt",
+        "slug": "deemz-3gm9b6AeMf2eGQTLashkDt"
+      },
+      {
+        "spotify_id": "5KQOO1nMW2y16wX56EDZep",
+        "name": "Klaudia Szafrańska",
+        "spotify_url": "https://open.spotify.com/artist/5KQOO1nMW2y16wX56EDZep",
+        "slug": "klaudia-szafranska-5KQOO1nMW2y16wX56EDZep"
+      },
+      {
+        "spotify_id": "1yq2JzsqbzFbJ1B7wGOXLc",
+        "name": "Young Igi",
+        "spotify_url": "https://open.spotify.com/artist/1yq2JzsqbzFbJ1B7wGOXLc",
+        "slug": "young-igi-1yq2JzsqbzFbJ1B7wGOXLc"
+      },
+      {
+        "spotify_id": "7FwxJtVorL07N6kbqmkPr6",
+        "name": "PlanBe",
+        "spotify_url": "https://open.spotify.com/artist/7FwxJtVorL07N6kbqmkPr6",
+        "slug": "planbe-7FwxJtVorL07N6kbqmkPr6"
+      }
+    ],
+    "albums": [
+      {
+        "spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "title": "Dla fanek euforii",
+        "slug": "dla-fanek-euforii-4yIytvXDK0ZIIU2W4fnABJ",
+        "spotify_url": "https://open.spotify.com/album/4yIytvXDK0ZIIU2W4fnABJ",
+        "spotify_album_type": "album",
+        "cover_url": "https://i.scdn.co/image/ab67616d0000b273af188896272d311de3d6f387",
+        "release_date": "2017-06-14",
+        "release_date_raw": "2017-06-14",
+        "release_date_precision": "day",
+        "total_tracks": 7,
+        "album_type": "album",
+        "primary_artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R"
+      }
+    ],
+    "tracks": [
+      {
+        "spotify_id": "1koe87P9GUj9jzitVVvi0Q",
+        "title": "Bogini",
+        "spotify_url": "https://open.spotify.com/track/1koe87P9GUj9jzitVVvi0Q",
+        "track_number": 1,
+        "disc_number": 1,
+        "duration_ms": 262146,
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ"
+      },
+      {
+        "spotify_id": "1GtAhsRxN4rpTpekNQ2MNp",
+        "title": "Noc w noc",
+        "spotify_url": "https://open.spotify.com/track/1GtAhsRxN4rpTpekNQ2MNp",
+        "track_number": 2,
+        "disc_number": 1,
+        "duration_ms": 208004,
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ"
+      },
+      {
+        "spotify_id": "34u4K9WM9syTgswZpZyNdH",
+        "title": "Candy",
+        "spotify_url": "https://open.spotify.com/track/34u4K9WM9syTgswZpZyNdH",
+        "track_number": 3,
+        "disc_number": 1,
+        "duration_ms": 195882,
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ"
+      },
+      {
+        "spotify_id": "4nXXxZKRFFhZw1LlwhBhY6",
+        "title": "Hypebae",
+        "spotify_url": "https://open.spotify.com/track/4nXXxZKRFFhZw1LlwhBhY6",
+        "track_number": 4,
+        "disc_number": 1,
+        "duration_ms": 238179,
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ"
+      },
+      {
+        "spotify_id": "5nSG1nxLkEMT1aVz5r68cU",
+        "title": "Kawa i Xanax",
+        "spotify_url": "https://open.spotify.com/track/5nSG1nxLkEMT1aVz5r68cU",
+        "track_number": 5,
+        "disc_number": 1,
+        "duration_ms": 249153,
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ"
+      },
+      {
+        "spotify_id": "0n82eMFT3925mhEdQvXZYa",
+        "title": "Co jest ze mną",
+        "spotify_url": "https://open.spotify.com/track/0n82eMFT3925mhEdQvXZYa",
+        "track_number": 6,
+        "disc_number": 1,
+        "duration_ms": 171428,
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ"
+      },
+      {
+        "spotify_id": "3tox1pDOjLKPyoQF8hQRCV",
+        "title": "Love",
+        "spotify_url": "https://open.spotify.com/track/3tox1pDOjLKPyoQF8hQRCV",
+        "track_number": 7,
+        "disc_number": 1,
+        "duration_ms": 184714,
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ"
+      }
+    ],
+    "album_artists": [
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "position": 1
+      }
+    ],
+    "track_artists": [
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 1,
+        "artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "position": 1
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 2,
+        "artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "position": 1
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 2,
+        "artist_spotify_id": "4TUfkQYmi7lao7Ghwu6hsA",
+        "position": 2
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 3,
+        "artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "position": 1
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 3,
+        "artist_spotify_id": "3gm9b6AeMf2eGQTLashkDt",
+        "position": 2
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 3,
+        "artist_spotify_id": "5KQOO1nMW2y16wX56EDZep",
+        "position": 3
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 4,
+        "artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "position": 1
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 4,
+        "artist_spotify_id": "1yq2JzsqbzFbJ1B7wGOXLc",
+        "position": 2
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 5,
+        "artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "position": 1
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 5,
+        "artist_spotify_id": "7FwxJtVorL07N6kbqmkPr6",
+        "position": 2
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 6,
+        "artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "position": 1
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 6,
+        "artist_spotify_id": "1MZ1TtfmzMHEYIlynXsr1a",
+        "position": 2
+      },
+      {
+        "album_spotify_id": "4yIytvXDK0ZIIU2W4fnABJ",
+        "disc_number": 1,
+        "track_number": 7,
+        "artist_spotify_id": "1fxbULcd6ryMNc1usHoP0R",
+        "position": 1
+      }
+    ]
+  }
+}
