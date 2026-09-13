@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { moderateArtistBiographyAction, removeArtistBiographyAction, type BiographyModerationState } from "@/app/admin/biografie/actions";
 
 export type BiographySubmission = {
@@ -78,6 +78,7 @@ export function ArtistBiographyModeration({ submissions }: { submissions: Biogra
 }
 
 function PublishedBiographyCard({ biography }: { biography: PublishedBiography }) {
+  const [confirming, setConfirming] = useState(false);
   const [state, action, pending] = useActionState(removeArtistBiographyAction, initialState);
   return <article className="rounded-2xl border border-zinc-200 p-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -90,16 +91,20 @@ function PublishedBiographyCard({ biography }: { biography: PublishedBiography }
       {biography.slug && <Link href={`/artist/${biography.slug}`} className="text-sm font-bold underline">Otwórz profil</Link>}
     </div>
     <p className="mt-4 whitespace-pre-line rounded-xl bg-[#f6f4ef] p-4 text-zinc-700">{biography.description}</p>
-    <form action={action} className="mt-4" onSubmit={event => {
-      if (!window.confirm(`Usunąć biografię artysty ${biography.name ?? "bez nazwy"}?`)) event.preventDefault();
-    }}>
+    <form action={action} className="mt-4">
       <input type="hidden" name="artistId" value={biography.id} />
       <label className="block text-sm font-bold">Powód usunięcia
         <input name="reason" maxLength={1000} placeholder="Opcjonalna notatka dla historii moderacji" className="mt-2 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 font-normal" />
       </label>
-      <button disabled={pending || state.success} className="mt-3 rounded-xl bg-red-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">
-        {pending ? "Usuwanie…" : state.success ? "Usunięto" : "Usuń biografię"}
-      </button>
+      {!confirming
+        ? <button type="button" onClick={() => setConfirming(true)} disabled={state.success} className="mt-3 rounded-xl bg-red-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">Usuń biografię</button>
+        : <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-4">
+          <p className="text-sm font-bold text-red-800">Czy na pewno usunąć biografię artysty {biography.name ?? "bez nazwy"}?</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button disabled={pending || state.success} className="rounded-xl bg-red-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{pending ? "Usuwanie…" : state.success ? "Usunięto" : "Tak, usuń"}</button>
+            <button type="button" onClick={() => setConfirming(false)} disabled={pending || state.success} className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-bold disabled:opacity-60">Anuluj</button>
+          </div>
+        </div>}
       {state.message && <p aria-live="polite" className={`mt-3 text-sm ${state.success ? "text-emerald-700" : "text-red-700"}`}>{state.message}</p>}
     </form>
   </article>;
