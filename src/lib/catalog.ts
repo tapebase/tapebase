@@ -46,9 +46,27 @@ function checked<T>(result: { data: T | null; error: unknown }): T {
   return result.data;
 }
 async function listAlbumsUncached(q = "", page = 1, limit = pageSize): Promise<{ rows: Album[]; count: number }> {
-  let query = catalogClient().from("albums").select(albumFields, { count: "exact" })
+  const client = catalogClient();
+  if (q) {
+    const offset = (page - 1) * limit;
+    const matchResult = await client.rpc("search_album_ids", {
+      search_query: q, result_offset: offset, result_limit: limit,
+    }).returns<{ album_id: number; total_count: number }[]>();
+    const matches = checked(matchResult as unknown as {
+      data: { album_id: number; total_count: number }[] | null;
+      error: unknown;
+    });
+    if (!matches.length) {
+      if (page > 1) return { rows: [], count: (await listAlbumsUncached(q, 1, 1)).count };
+      return { rows: [], count: 0 };
+    }
+    const result = await client.from("albums").select(albumFields)
+      .in("id", matches.map(item => item.album_id)).returns<Album[]>();
+    const rows = checked(result), byId = new Map(rows.map(album => [album.id, album]));
+    return { rows: matches.flatMap(item => byId.get(item.album_id) ?? []), count: Number(matches[0].total_count) };
+  }
+  const query = client.from("albums").select(albumFields, { count: "exact" })
     .order("created_at", { ascending: false }).order("id", { ascending: false });
-  if (q) query = query.ilike("title", pattern(q));
   const result = await query.range((page - 1) * limit, page * limit - 1).returns<Album[]>();
   if (result.error?.code === "PGRST103" && page > 1) return { rows: [] as Album[], count: (await listAlbumsUncached(q, 1, 1)).count };
   return { rows: checked(result), count: result.count ?? 0 };

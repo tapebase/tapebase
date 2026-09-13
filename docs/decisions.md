@@ -207,3 +207,10 @@
   pierwszeństwo przed kolejnymi synchronizacjami.
 - Opis jest krótkim tekstem złożonym z faktów strukturalnych; nie kopiujemy biografii
   z Wikipedii.
+
+## Wyszukiwanie katalogu (2026-09-13)
+
+- Wyszukiwanie albumów dopasowuje zarówno tytuł wydawnictwa, jak i nazwę każdego
+  pełnego artysty przypisanego do albumu przez `album_artists`.
+- Techniczny profil współwykonawcy nie rozszerza wyników wyszukiwania, dopóki artysta
+  nie zostanie oficjalnie dodany do katalogu.
