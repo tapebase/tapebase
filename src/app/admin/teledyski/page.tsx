@@ -149,7 +149,7 @@ export default async function AdminVideosPage({ searchParams }: { searchParams: 
               <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" name="official" value="true" /> Oficjalny klip</label>
               <button name="decision" value="approve" className="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white">Zatwierdź</button>
             </form>
-            <form action={reviewYouTubeVideo} className="flex flex-wrap gap-3"><input type="hidden" name="artistId" value={item.artist_id} /><input type="hidden" name="videoId" value={item.youtube_video_id} /><input required name="reason" placeholder="Powód odrzucenia" className="min-w-0 flex-1 rounded-xl border border-zinc-300 px-3 py-2 text-sm" /><button name="decision" value="reject" className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-700">Odrzuć</button></form>
+            <form action={reviewYouTubeVideo} className="flex flex-wrap gap-3"><input type="hidden" name="artistId" value={item.artist_id} /><input type="hidden" name="videoId" value={item.youtube_video_id} /><input name="reason" maxLength={1000} placeholder="Powód odrzucenia (opcjonalnie)" className="min-w-0 flex-1 rounded-xl border border-zinc-300 px-3 py-2 text-sm" /><button name="decision" value="reject" className="rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-700">Odrzuć</button></form>
           </div>
         </div>
       </article>)}</div><Pagination page={videosPage} count={pendingVideos.count ?? 0} parameter="videosPage" otherPage={channelsPage} /></> : <p className="mt-5 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak teledysków oczekujących na decyzję.</p>}

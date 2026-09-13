@@ -47,7 +47,7 @@ export async function reviewYouTubeVideo(formData: FormData) {
   const decision = String(formData.get("decision") ?? "");
   const reason = String(formData.get("reason") ?? "").trim();
   if (!/^[A-Za-z0-9_-]{11}$/.test(videoId) || !["approve", "reject"].includes(decision)) throw new Error("Nieprawidłowa decyzja moderacji.");
-  if (decision === "reject" && !reason) throw new Error("Podaj powód odrzucenia.");
+  if (reason.length > 1000) throw new Error("Powód odrzucenia może mieć najwyżej 1000 znaków.");
   const client = await createClient();
   const { error } = await client.rpc("review_artist_youtube_video", {
     target_artist_id: targetArtist,
@@ -56,7 +56,7 @@ export async function reviewYouTubeVideo(formData: FormData) {
     official: formData.get("official") === "true",
     reason: reason || null,
   });
-  if (error) throw new Error("Nie udało się zapisać decyzji o teledysku.");
+  if (error) throw new Error(`Nie udało się zapisać decyzji o teledysku: ${error.message}`);
   revalidateYouTube(targetArtist);
 }
 

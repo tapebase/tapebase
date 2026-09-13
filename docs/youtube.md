@@ -31,8 +31,8 @@ opublikowany automatycznie tylko wtedy, gdy
 pochodzi ze zweryfikowanego kanału, pasuje do utworu w katalogu i nie nosi cech
 audio, lyric video, visualizera, koncertu, wywiadu, reakcji ani materiału fanowskiego.
 
-Panel `/admin/teledyski` pozwala zatwierdzać kanały i filmy, odrzucać filmy z
-powodem oraz ręcznie dopisać jednoznaczny Channel ID lub Video ID.
+Panel `/admin/teledyski` pozwala zatwierdzać kanały i filmy, opcjonalnie dopisać
+powód odrzucenia oraz ręcznie dodać jednoznaczny Channel ID lub Video ID.
 
 ## Wyświetlanie
 
