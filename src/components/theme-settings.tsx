@@ -22,11 +22,11 @@ function subscribe(callback: () => void) {
 }
 
 function getTheme(): Theme {
-  return window.localStorage.getItem(storageKey) === "dark" ? "dark" : "light";
+  return window.localStorage.getItem(storageKey) === "light" ? "light" : "dark";
 }
 
 export function ThemeSettings() {
-  const theme = useSyncExternalStore(subscribe, getTheme, (): Theme => "light");
+  const theme = useSyncExternalStore(subscribe, getTheme, (): Theme => "dark");
 
   useEffect(() => {
     applyTheme(theme);
