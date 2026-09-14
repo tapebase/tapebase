@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getArtist, artistAlbums, artistTracks, pageNumber, type SearchParams } from "@/lib/catalog";
+import { getArtist, artistAlbums, allArtistTracks, pageNumber, type SearchParams } from "@/lib/catalog";
 import { AlbumCard, Artwork, Empty, Pagination } from "@/components/catalog";
-import { albumPath, artistPath } from "@/lib/catalog-format";
+import { artistPath } from "@/lib/catalog-format";
 import { getViewer } from "@/lib/auth";
 import { getArtistCommunity } from "@/lib/community";
 import { ArtistRatingPanel, RatingStars } from "@/components/community-controls";
@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getArtistVideos } from "@/lib/artist-videos";
 import { ArtistVideos } from "@/components/artist-videos";
 import { ArtistCommunitySection } from "@/components/artist-community";
+import { ArtistTrackList } from "@/components/artist-track-list";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 const birthDateFormat = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -51,11 +52,11 @@ export default async function ArtistPage({ params, searchParams }: Props) {
   const artist = await getArtist((await params).slug);
   if (!artist) notFound();
   const search = await searchParams;
-  const albumPage = pageNumber(search.albums), trackPage = pageNumber(search.tracks);
+  const albumPage = pageNumber(search.albums);
   const viewer = await getViewer();
   const [albums, tracks, community, concerts, videos] = await Promise.all([
     artistAlbums(artist.id, albumPage),
-    artistTracks(artist.id, trackPage),
+    allArtistTracks(artist.id),
     getArtistCommunity(artist.id, viewer),
     getArtistConcerts(artist.id),
     getArtistVideos(artist.id),
@@ -130,16 +131,13 @@ export default async function ArtistPage({ params, searchParams }: Props) {
       <p className="mb-6 text-sm text-zinc-500">Wydawnictwa dostępne w TAPEBASE. Katalog może nie obejmować całej dyskografii.</p>
       {albums.rows.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{albums.rows.map(album => <AlbumCard key={album.id} album={album} />)}</div>
         : <Empty>Brak albumów tego artysty na tej stronie katalogu.</Empty>}
-      <Pagination path={artistPath(artist)} page={albumPage} count={albums.count} pageKey="albums" other={{ tracks: String(trackPage) }} />
+      <Pagination path={artistPath(artist)} page={albumPage} count={albums.count} pageKey="albums" />
     </section>
     <ArtistVideos videos={videos} />
     <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <h2 className="mb-3 text-2xl font-black">Utwory z udziałem</h2>
       <p className="mb-6 text-sm text-zinc-500">Wykonawcy według Spotify. Lista obejmuje także własne utwory artysty.</p>
-      {tracks.rows.length ? <ul className="space-y-4">{tracks.rows.map(({ track }, index) => track && <li key={track.id || index} className="border-b border-zinc-100 pb-4">
-        {track.album ? <Link href={`${albumPath(track.album)}#track-${track.id}`} className="font-semibold hover:underline">{track.title}<span className="mt-1 block text-sm font-normal text-zinc-500">{track.album.title}</span></Link> : track.title}
-      </li>)}</ul> : <Empty>Brak utworów z udziałem tego artysty na tej stronie.</Empty>}
-      <Pagination path={artistPath(artist)} page={trackPage} count={tracks.count} pageKey="tracks" other={{ albums: String(albumPage) }} />
+      {tracks.rows.length ? <ArtistTrackList participations={tracks.rows} /> : <Empty>Brak utworów z udziałem tego artysty.</Empty>}
     </section>
     {artist.catalog_visible && <ArtistCommunitySection artistId={artist.id} comments={community.comments} viewer={viewer} returnPath={returnPath} />}
   </main>;

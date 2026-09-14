@@ -244,3 +244,16 @@ export async function artistTracks(artistId: number, page = 1): Promise<{ rows: 
   if (result.error?.code === "PGRST103" && page > 1) return { rows: [] as Participation[], count: (await artistTracks(artistId, 1)).count };
   return { rows: checked(result), count: result.count ?? 0 };
 }
+
+export async function allArtistTracks(artistId: number): Promise<{ rows: Participation[]; count: number }> {
+  const rows: Participation[] = [];
+  const batchSize = 500;
+  for (let offset = 0; ; offset += batchSize) {
+    const result = await catalogClient().from("spotify_track_artists")
+      .select("track:tracks(id,title,album:albums(id,title,slug))", { count: offset === 0 ? "exact" : undefined })
+      .eq("artist_id", artistId).order("track_id").range(offset, offset + batchSize - 1).returns<Participation[]>();
+    const batch = checked(result);
+    rows.push(...batch);
+    if (batch.length < batchSize) return { rows, count: result.count ?? rows.length };
+  }
+}
