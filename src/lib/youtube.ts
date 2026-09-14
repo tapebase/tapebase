@@ -53,6 +53,13 @@ export type VideoMatch = {
   evidence: Record<string, unknown>;
 };
 
+export type TrustedChannelCandidate = {
+  channelId: string;
+  channelTitle: string;
+  confidence: number;
+  evidence: Record<string, unknown>;
+};
+
 export class YouTubeApiError extends Error {
   readonly quotaExceeded: boolean;
   constructor(message: string, quotaExceeded = false) {
@@ -72,6 +79,15 @@ export function normalizeVideoText(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("pl-PL").replace(/&(?:amp;|quot;|#39);/g, " ")
     .replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function artistAliases(value: string) {
+  const normalized = normalizeVideoText(value);
+  const aliases = new Set([normalized]);
+  const withoutNumericSuffix = normalized.replace(/\s+\d{2,4}$/, "").trim();
+  if (withoutNumericSuffix.length >= 4) aliases.add(withoutNumericSuffix);
+  if (/^(?:[a-z]\s+){2,}[a-z]$/.test(normalized)) aliases.add(normalized.replace(/\s/g, ""));
+  return [...aliases];
 }
 
 export function parseYouTubeDuration(value: string | undefined) {
@@ -130,12 +146,12 @@ export function scoreVideoCandidate(input: {
   verifiedChannel: boolean;
 }): VideoMatch {
   const title = normalizeVideoText(input.video.title);
-  const artist = normalizeVideoText(input.artistName);
+  const aliases = artistAliases(input.artistName);
   const channel = normalizeVideoText(input.video.channelTitle);
   const blocked = blockedPhrases.filter(phrase => title.includes(normalizeVideoText(phrase)));
   const officialMarker = officialPhrases.some(phrase => title.includes(normalizeVideoText(phrase)));
-  const artistInTitle = artist.length >= 2 && title.includes(artist);
-  const artistInChannel = artist.length >= 2 && channel.includes(artist);
+  const artistInTitle = aliases.some(artist => artist.length >= 2 && title.includes(artist));
+  const artistInChannel = aliases.some(artist => artist.length >= 2 && channel.includes(artist));
   const matchedTrack = input.tracks
     .map(track => ({ ...track, normalized: normalizeVideoText(track.title) }))
     .filter(track => track.normalized.length >= 3 && title.includes(track.normalized))
@@ -153,7 +169,7 @@ export function scoreVideoCandidate(input: {
   const isOfficial = input.verifiedChannel && Boolean(matchedTrack) && !rejected;
   return {
     rejected,
-    autoApprove: isOfficial && (artistInTitle || artistInChannel || officialMarker) && confidence >= 0.85,
+    autoApprove: isOfficial && (artistInTitle || artistInChannel) && confidence >= 0.85,
     isOfficial,
     confidence,
     matchedTrackId: matchedTrack?.id ?? null,
@@ -167,6 +183,53 @@ export function scoreVideoCandidate(input: {
       blockedPhrases: blocked,
     },
   };
+}
+
+export function inferTrustedChannels(
+  videos: VideoCandidate[],
+  artistName: string,
+  tracks: TrackIdentity[],
+): TrustedChannelCandidate[] {
+  const artist = normalizeVideoText(artistName);
+  const groups = new Map<string, {
+    title: string; valid: number; tracks: Set<number>; artistTitles: number; officialMarkers: number;
+  }>();
+  for (const video of videos) {
+    const match = scoreVideoCandidate({ video, artistName, tracks, verifiedChannel: false });
+    if (match.rejected) continue;
+    const group = groups.get(video.channelId) ?? {
+      title: video.channelTitle, valid: 0, tracks: new Set<number>(), artistTitles: 0, officialMarkers: 0,
+    };
+    group.valid++;
+    if (match.matchedTrackId) group.tracks.add(match.matchedTrackId);
+    if (match.evidence.artistInTitle === true) group.artistTitles++;
+    if (match.evidence.officialMarker === true) group.officialMarkers++;
+    groups.set(video.channelId, group);
+  }
+
+  return [...groups.entries()].flatMap(([channelId, group]) => {
+    const canonicalChannel = normalizeVideoText(group.title)
+      .replace(/\b(official|youtube|channel|music|vevo|label)\b/g, " ")
+      .replace(/\s+/g, " ").trim();
+    const exactChannel = canonicalChannel === artist;
+    const trackMatches = group.tracks.size;
+    const repeatedEvidence = trackMatches >= 3 && group.artistTitles >= 3;
+    const exactEvidence = exactChannel && trackMatches >= 2 && group.artistTitles >= 2;
+    if (!repeatedEvidence && !exactEvidence) return [];
+    return [{
+      channelId,
+      channelTitle: group.title,
+      confidence: exactEvidence ? 0.95 : 0.9,
+      evidence: {
+        corroboratedSearch: true,
+        exactChannelName: exactChannel,
+        matchedTrackCount: trackMatches,
+        artistTitleCount: group.artistTitles,
+        officialMarkerCount: group.officialMarkers,
+        validCandidateCount: group.valid,
+      },
+    }];
+  });
 }
 
 export function parseYouTubeVideoId(value: string) {

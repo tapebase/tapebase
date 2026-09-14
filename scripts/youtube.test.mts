@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   classifyChannel,
+  inferTrustedChannels,
   parseYouTubeChannelId,
   parseYouTubeDuration,
   parseYouTubeVideoId,
@@ -50,6 +51,12 @@ test("auto-approves a matching track only on a verified channel", () => {
     video, artistName: "Quebonafide", tracks: [{ id: 7, title: "Candy" }], verifiedChannel: false,
   });
   assert.equal(uncertain.autoApprove, false);
+
+  const sharedLabel = scoreVideoCandidate({
+    video: { ...video, title: "Inny wykonawca - Candy (official music video)", channelTitle: "Shared Label" },
+    artistName: "Quebonafide", tracks: [{ id: 7, title: "Candy" }], verifiedChannel: true,
+  });
+  assert.equal(sharedLabel.autoApprove, false);
 });
 
 test("rejects audio, live, reaction and unavailable results", () => {
@@ -67,4 +74,23 @@ test("recognizes common publisher channel types", () => {
   assert.equal(classifyChannel("ArtistVEVO"), "vevo");
   assert.equal(classifyChannel("XYZ Records"), "label");
   assert.equal(classifyChannel("Artist Official"), "publisher");
+});
+
+test("infers a trusted channel only from repeated artist and track evidence", () => {
+  const tracks = [{ id: 1, title: "Pierwszy" }, { id: 2, title: "Drugi" }, { id: 3, title: "Trzeci" }];
+  const candidates = tracks.map((track, index) => ({
+    ...video,
+    videoId: `abcdefghij${index}`,
+    title: `Bedoes - ${track.title}`,
+    channelTitle: "SBM",
+  }));
+  const trusted = inferTrustedChannels(candidates, "Bedoes 2115", tracks);
+  assert.equal(trusted.length, 1);
+  assert.equal(trusted[0].channelId, video.channelId);
+
+  const unrelated = candidates.map((candidate, index) => ({
+    ...candidate,
+    title: `${["Green Day", "Omah Lay", "Phil Collins"][index]} - ${tracks[index].title}`,
+  }));
+  assert.deepEqual(inferTrustedChannels(unrelated, "Deys", tracks), []);
 });

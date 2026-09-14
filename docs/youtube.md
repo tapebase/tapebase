@@ -25,7 +25,10 @@ a publiczna funkcja nie pokazuje danych starszych niż 30 dni.
 
 Kanał wskazany przez właściwość Wikidata P2397 zaakceptowanego rekordu artysty
 jest zaufany automatycznie. Kanały znalezione wyłącznie przez wyszukiwanie czekają
-na administratora, jeśli dopasowanie osiągnęło co najmniej 40% pewności. Słabsze
+na administratora, jeśli dopasowanie osiągnęło co najmniej 40% pewności. Wyjątkiem
+jest kanał potwierdzony przez co najmniej trzy różne utwory i trzy tytuły zawierające
+nazwę artysty albo kanał nazwany dokładnie jak artysta potwierdzony dwoma utworami.
+Takie powtarzalne dopasowanie może zostać zweryfikowane automatycznie. Słabsze
 dopasowanie filmu nadal pozostaje dostępne do niezależnej oceny. Film może zostać
 opublikowany automatycznie tylko wtedy, gdy
 pochodzi ze zweryfikowanego kanału, pasuje do utworu w katalogu i nie nosi cech
@@ -33,6 +36,9 @@ audio, lyric video, visualizera, koncertu, wywiadu, reakcji ani materiału fanow
 
 Panel `/admin/teledyski` pozwala zatwierdzać kanały i filmy, opcjonalnie dopisać
 powód odrzucenia oraz ręcznie dodać jednoznaczny Channel ID lub Video ID.
+Zatwierdzenie kanału od razu publikuje zapisane klipy, które pasują do utworu i
+mają nazwę artysty w tytule albo nazwie kanału; nie wymaga kolejnego
+wywołania API.
 
 ## Wyświetlanie
 

@@ -5,6 +5,7 @@ import {
   classifyChannel,
   getYouTubeChannel,
   getYouTubeVideos,
+  inferTrustedChannels,
   scoreVideoCandidate,
   searchArtistVideos,
   wikidataYouTubeChannel,
@@ -299,11 +300,19 @@ export async function syncArtistYouTubeVideos(options: { startedBy?: string | nu
       }).eq("artist_id", artist.id);
       try {
         await ensureWikidataChannel(database, apiKey, artist);
-        const verified = await verifiedChannelIds(database, artist.id);
         const tracks = await loadTracks(database, artist.id);
         const ids = await searchArtistVideos(apiKey, artist.name);
         result.videosFound += ids.length;
         const videos = await getYouTubeVideos(apiKey, ids);
+        for (const inferred of inferTrustedChannels(videos, artist.name, tracks)) {
+          await saveChannel(database, { id: inferred.channelId, title: inferred.channelTitle });
+          const status = await linkChannel(database, artist.id, inferred.channelId, "youtube_search", "verified",
+            inferred.confidence, inferred.evidence);
+          if (status === "verified") {
+            await saveChannel(database, { id: inferred.channelId, title: inferred.channelTitle }, "verified");
+          }
+        }
+        const verified = await verifiedChannelIds(database, artist.id);
         const stored = await saveVideoCandidates(database, artist, videos, tracks, verified);
         result.videosSaved += stored.saved;
         result.videosAutoApproved += stored.approved;
