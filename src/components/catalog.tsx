@@ -32,7 +32,8 @@ export async function Header() {
           </div>
         </div>
         <Link href="/#ostatnio-dodane">Ostatnio dodane</Link>
-        {viewer && <><Link href="/zglos">Zgłoś album / artystę</Link><FeedbackLink /></>}
+        <Link href="/zglos">Zgłoś album / artystę</Link>
+        {viewer && <FeedbackLink />}
       </nav>{viewer ? <div className="flex items-center gap-4 text-sm">{viewer.role === "admin" && <Link href="/admin/zgloszenia" className="font-bold">Administracja</Link>}<Link href="/powiadomienia" aria-label={unreadNotifications > 0 ? `Powiadomienia: ${unreadNotifications} nieprzeczytanych` : "Powiadomienia"} title="Powiadomienia" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-zinc-100">
         <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
         {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}

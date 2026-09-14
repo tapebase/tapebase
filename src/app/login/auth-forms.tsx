@@ -10,7 +10,7 @@ const fieldClass = "mt-2 w-full rounded-xl border border-zinc-300 bg-white px-4 
 
 export function SignInForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(signIn, initialState);
-  return <form action={action} className="space-y-4 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+  return <form id="logowanie" action={action} className="scroll-mt-6 space-y-4 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
     <input type="hidden" name="next" value={next} />
     <h2 className="text-2xl font-black">Logowanie</h2>
     <label className="block text-sm font-semibold">E-mail
@@ -31,7 +31,7 @@ export function SignInForm({ next }: { next: string }) {
 
 export function SignUpForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(signUp, initialState);
-  return <form action={action} className="space-y-4 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+  return <form id="rejestracja" action={action} className="scroll-mt-6 space-y-4 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
     <input type="hidden" name="next" value={next} />
     <h2 className="text-2xl font-black">Nowe konto</h2>
     <label className="block text-sm font-semibold">Nazwa użytkownika
