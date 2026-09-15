@@ -245,3 +245,16 @@
   dopiero po kliknięciu miniatury.
 - Metadane są odświeżane okresowo i nie są publicznie pokazywane po 30 dniach bez
   ponownego sprawdzenia.
+
+## Automatyczna obsługa zgłoszeń katalogowych (2026-09-15)
+
+- Backend potwierdza każde nowe zgłoszenie bezpośrednio w Spotify Web API przed
+  zapisaniem decyzji. Dane przesłane przez przeglądarkę nie stanowią podstawy importu.
+- Kompletny rekord oznaczony przez Spotify jako album jest automatycznie zatwierdzany
+  i importowany, jeśli u tego samego głównego wykonawcy nie ma podobnej edycji.
+- Single i możliwe EP, kompilacje, niepełne rekordy, przyszłe wydania, możliwe
+  reedycje oraz całe dyskografie artystów wymagają ręcznej decyzji administratora.
+- Automatyczna kontrola zapisuje czytelny powód w istniejącej notatce moderacyjnej.
+  Nie tworzymy drugiego systemu kolejek ani równoległego modelu statusów.
+- Zatwierdzenie tworzy trwałe zadanie przed bezpośrednią próbą importu. Dzięki temu
+  błąd sieci lub limit Spotify nie gubi zgłoszenia i administrator może je wznowić.

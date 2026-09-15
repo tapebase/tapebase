@@ -61,7 +61,7 @@ export default async function AdminSubmissionsPage({ searchParams }: { searchPar
 
   const feedback = await searchParams;
   return <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
-    <header className="rounded-3xl bg-white p-6 shadow-sm sm:p-8"><p className="text-sm font-bold uppercase tracking-widest text-zinc-500">Panel administratora</p><h1 className="mt-2 text-4xl font-black">Zgłoszenia użytkowników</h1><p className="mt-4 max-w-3xl text-zinc-600">Akceptuj wartościowe pozycje, odrzucaj błędne linki i przekazuj zatwierdzonych artystów do importera Spotify.</p><AdminTabs active="submissions" /></header>
+    <header className="rounded-3xl bg-white p-6 shadow-sm sm:p-8"><p className="text-sm font-bold uppercase tracking-widest text-zinc-500">Panel administratora</p><h1 className="mt-2 text-4xl font-black">Zgłoszenia użytkowników</h1><p className="mt-4 max-w-3xl text-zinc-600">Tutaj trafiają pozycje wymagające decyzji: możliwe duplikaty, nietypowe wydania oraz całe dyskografie artystów. Bezpieczne albumy są dodawane automatycznie.</p><AdminTabs active="submissions" /></header>
     {feedback.message && <p role="status" className={`mt-6 rounded-xl p-4 text-sm ${feedback.success === "1" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-700"}`}>{feedback.message}</p>}
     <CatalogSubmissionModeration submissions={submissions} history={history} />
   </main>;

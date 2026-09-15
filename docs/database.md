@@ -266,6 +266,13 @@ ich liczba ustala priorytet w panelu administratora.
 Zalogowany użytkownik widzi własne zgłoszenia, a administrator całą kolejkę. Zapis
 odbywa się przez kontrolowaną funkcję RPC, która blokuje pozycje istniejące już w
 katalogu i ogranicza konto do 10 nowych zgłoszeń na 24 godziny.
+Przed zapisem backend potwierdza rekord bezpośrednio w Spotify Web API. Zwykły,
+kompletny album bez podobnej edycji tego samego wykonawcy jest automatycznie
+zatwierdzany i importowany. Single, możliwe EP, kompilacje, pozycje bez okładki lub
+tracklisty, możliwe reedycje oraz całe profile artystów pozostają w kolejce ręcznej.
+Powód automatycznej decyzji jest zapisywany w `moderator_note`. Jeśli bezpośredni
+import nie powiedzie się przejściowo, utworzone wcześniej trwałe zadanie pozwala
+administratorowi bezpiecznie go wznowić.
 Albumowe zgłoszenie ma `release_kind` (`album` lub `ep`). Odrzucenie wymaga
 `rejection_reason`, który jest widoczny dla zgłaszających. Panel porównuje Spotify ID
 z katalogiem i sygnalizuje tytuły mogące być inną edycją tego samego albumu.
