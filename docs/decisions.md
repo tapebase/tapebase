@@ -252,8 +252,13 @@
   zapisaniem decyzji. Dane przesłane przez przeglądarkę nie stanowią podstawy importu.
 - Kompletny rekord oznaczony przez Spotify jako album jest automatycznie zatwierdzany
   i importowany, jeśli u tego samego głównego wykonawcy nie ma podobnej edycji.
-- Single i możliwe EP, kompilacje, niepełne rekordy, przyszłe wydania, możliwe
-  reedycje oraz całe dyskografie artystów wymagają ręcznej decyzji administratora.
+- Single i możliwe EP, kompilacje, niepełne rekordy, przyszłe wydania oraz możliwe
+  reedycje wymagają ręcznej decyzji administratora.
+- Profil artysty jest automatycznie zatwierdzany, gdy bezpośredni Spotify ID zgadza
+  się z odpowiedzią API, artysta ma zdjęcie i własne wydawnictwo oraz nie koliduje
+  nazwą z innym Spotify ID w katalogu. Pozostałe profile trafiają do moderatora.
+- Rozmiar dyskografii nie jest sygnałem ryzyka. Po automatycznej akceptacji istniejąca
+  trwała kolejka rozpoczyna import albumami i zachowuje postęp po błędzie lub limicie 429.
 - Automatyczna kontrola zapisuje czytelny powód w istniejącej notatce moderacyjnej.
   Nie tworzymy drugiego systemu kolejek ani równoległego modelu statusów.
 - Zatwierdzenie tworzy trwałe zadanie przed bezpośrednią próbą importu. Dzięki temu

@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseSpotifySubmission } from "@/lib/catalog-submission-validation";
 import { submissionCountryCode } from "@/lib/countries";
 import { musicGenre } from "@/lib/genres";
 import { automaticReviewNote, inspectCatalogSubmission } from "@/lib/catalog-submission-review";
 import { executeAdminAlbumImport } from "@/lib/spotify-admin";
+import { runImportQueueBatch } from "@/lib/import-queue";
 import { importClient } from "../../../scripts/spotify/writer.mts";
 
 export type SubmissionActionState = { message?: string; success?: boolean };
@@ -33,18 +35,24 @@ export async function submitSpotifyLink(
     const { data: existingSubmission, error: existingError } = await database.from("catalog_submissions")
       .select("id,status").eq("spotify_type", item.type).eq("spotify_id", item.id).maybeSingle();
     if (existingError) return { message: "Nie udało się sprawdzić wcześniejszych zgłoszeń." };
+    let alreadySupported = false;
     if (existingSubmission) {
       const { data: existingSupport, error: supportError } = await database.from("catalog_submission_supporters")
         .select("submission_id").eq("submission_id", existingSubmission.id).eq("user_id", viewerId).maybeSingle();
       if (supportError) return { message: "Nie udało się sprawdzić wcześniejszych zgłoszeń." };
-      if (existingSupport) return { success: true, message: "To zgłoszenie już jest na Twojej liście." };
+      alreadySupported = Boolean(existingSupport);
+      if (existingSupport && existingSubmission.status !== "pending") {
+        return { success: true, message: "To zgłoszenie już jest na Twojej liście." };
+      }
       if (existingSubmission.status === "imported") return { message: "Ta pozycja jest już w katalogu TAPEBASE." };
     }
-    const { count: recentCount, error: limitError } = await database.from("catalog_submission_supporters")
-      .select("submission_id", { count: "exact", head: true }).eq("user_id", viewerId)
-      .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
-    if (limitError) return { message: "Nie udało się sprawdzić limitu zgłoszeń." };
-    if ((recentCount ?? 0) >= 10) return { message: "Osiągnięto limit 10 nowych zgłoszeń na 24 godziny." };
+    if (!alreadySupported) {
+      const { count: recentCount, error: limitError } = await database.from("catalog_submission_supporters")
+        .select("submission_id", { count: "exact", head: true }).eq("user_id", viewerId)
+        .gte("created_at", new Date(Date.now() - 86_400_000).toISOString());
+      if (limitError) return { message: "Nie udało się sprawdzić limitu zgłoszeń." };
+      if ((recentCount ?? 0) >= 10) return { message: "Osiągnięto limit 10 nowych zgłoszeń na 24 godziny." };
+    }
     const inspection = await inspectCatalogSubmission(item.type, item.id);
 
     const { data, error } = await client.rpc("submit_spotify_catalog_item", {
@@ -91,6 +99,18 @@ export async function submitSpotifyLink(
         // after a transient Spotify or network failure.
       }
     }
+    if (inspection.review.autoApprove && update.data) {
+      after(async () => {
+        try {
+          for (let batch = 0; batch < 10; batch++) {
+            const result = await runImportQueueBatch(3);
+            if (!result.hasMore || result.waitingQuota) break;
+          }
+        } catch {
+          // The durable queue preserves the job for the next automatic or admin run.
+        }
+      });
+    }
     revalidatePath("/zglos");
     revalidatePath("/admin/zgloszenia");
     revalidatePath("/");
@@ -99,12 +119,14 @@ export async function submitSpotifyLink(
     revalidatePath("/rankingi");
     return {
       success: true,
-      message: data?.already_supported
-        ? "To zgłoszenie już jest na Twojej liście."
-        : imported
+      message: imported
           ? "Album został sprawdzony i automatycznie dodany do katalogu."
+          : inspection.review.autoApprove && item.type === "artist"
+            ? "Artysta został automatycznie zaakceptowany. Import dyskografii rozpoczął się w tle."
           : inspection.review.autoApprove
             ? "Album został zaakceptowany i dodany do bezpiecznej kolejki importu."
+            : data?.already_supported && !alreadySupported
+              ? "To zgłoszenie już jest na Twojej liście."
             : "Zgłoszenie wymaga sprawdzenia przez administratora. Powód znajdziesz poniżej.",
     };
   } catch {

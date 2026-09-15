@@ -10,7 +10,7 @@ export function CatalogSubmissionForm() {
   const [state, action, pending] = useActionState(submitSpotifyLink, initialState);
   return <form action={action} className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
     <h1 className="text-3xl font-black">Zgłoś do katalogu</h1>
-    <p className="mt-3 max-w-2xl text-zinc-600">Wklej link Spotify do albumu albo artysty. Bezpieczne albumy dodamy automatycznie, a duplikaty, nietypowe wydania i zgłoszenia artystów przekażemy administratorowi.</p>
+    <p className="mt-3 max-w-2xl text-zinc-600">Wklej link Spotify do albumu albo artysty. Kompletne, jednoznaczne profile i bezpieczne albumy dodamy automatycznie. Konflikty, duplikaty i nietypowe wydania sprawdzi administrator.</p>
     <label className="mt-6 block text-sm font-bold">Link Spotify
       <input name="spotifyUrl" type="url" required placeholder="https://open.spotify.com/album/…" className="mt-2 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 font-normal" />
     </label>

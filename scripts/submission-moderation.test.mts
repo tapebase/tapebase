@@ -24,7 +24,7 @@ test("automatically approves a complete ordinary Spotify album", () => {
   assert.equal(result.releaseKind, "album");
 });
 
-test("sends singles, possible editions and artist imports to moderation", () => {
+test("sends singles and possible editions to moderation", () => {
   const single = reviewCatalogSubmission({
     type: "album", title: "Krótka rzecz", spotifyAlbumType: "single",
     totalTracks: 5, coverUrl: "https://i.scdn.co/image/test", releaseDateRaw: "2026",
@@ -38,8 +38,27 @@ test("sends singles, possible editions and artist imports to moderation", () => 
   }, [{ spotifyId: "old", title: "Marmur" }], "new");
   assert.equal(edition.autoApprove, false);
   assert.match(edition.reasons.join(" "), /inna edycja/i);
+});
 
-  const performer = reviewCatalogSubmission({ type: "artist", title: "Artysta" });
-  assert.equal(performer.autoApprove, false);
-  assert.equal(performer.releaseKind, null);
+test("automatically approves complete artists and holds suspicious profiles", () => {
+  const complete = reviewCatalogSubmission({
+    type: "artist", title: "Joy Division", coverUrl: "https://i.scdn.co/image/test",
+    artistHasOwnRelease: true, artistNameConflict: false,
+  });
+  assert.equal(complete.autoApprove, true);
+  assert.equal(complete.riskScore, 0);
+  assert.equal(complete.releaseKind, null);
+
+  const empty = reviewCatalogSubmission({
+    type: "artist", title: "Podejrzany profil", artistHasOwnRelease: false,
+  });
+  assert.equal(empty.autoApprove, false);
+  assert.match(empty.reasons.join(" "), /zdjęcia.*wydawnictwa/i);
+
+  const conflict = reviewCatalogSubmission({
+    type: "artist", title: "Taka sama nazwa", coverUrl: "https://i.scdn.co/image/test",
+    artistHasOwnRelease: true, artistNameConflict: true,
+  });
+  assert.equal(conflict.autoApprove, false);
+  assert.match(conflict.reasons.join(" "), /inny profil/i);
 });

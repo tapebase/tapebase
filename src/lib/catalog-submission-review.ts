@@ -14,6 +14,10 @@ function spotifyClient() {
   });
 }
 
+function escapedLikePattern(value: string) {
+  return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+}
+
 export type InspectedCatalogSubmission = {
   type: SpotifySubmissionType;
   title: string;
@@ -31,10 +35,28 @@ export async function inspectCatalogSubmission(
   if (type === "artist") {
     const performer = artist(await spotify.get(`artists/${spotifyId}`));
     if (performer.spotify_id !== spotifyId) throw new Error("Spotify zwróciło innego artystę niż wskazany.");
+    const database = importClient();
+    const [releaseResult, matchingArtists] = await Promise.all([
+      spotify.get(`artists/${spotifyId}/albums?include_groups=album,single&market=PL&limit=10`),
+      database.from("artists").select("spotify_id,name")
+        .ilike("name", escapedLikePattern(performer.name)).neq("spotify_id", spotifyId).limit(20),
+    ]);
+    if (matchingArtists.error) throw new Error("Nie udało się sprawdzić konfliktów profilu artysty.");
+    const releasePage = record(releaseResult);
+    if (!Array.isArray(releasePage.items)) throw new Error("Spotify zwróciło nieprawidłową listę wydawnictw artysty.");
+    const hasOwnRelease = releasePage.items.map(album).some(release =>
+      release.artists[0]?.spotify_id === spotifyId
+      && (release.spotify_album_type === "album" || release.spotify_album_type === "single"));
+    const normalizedName = performer.name.trim().toLocaleLowerCase("pl-PL");
+    const nameConflict = (matchingArtists.data ?? []).some(item =>
+      item.name.trim().toLocaleLowerCase("pl-PL") === normalizedName);
     return {
       type, title: performer.name, thumbnailUrl: performer.image_url,
       primaryArtistSpotifyId: performer.spotify_id, primaryArtistImageUrl: performer.image_url,
-      review: reviewCatalogSubmission({ type, title: performer.name, coverUrl: performer.image_url }),
+      review: reviewCatalogSubmission({
+        type, title: performer.name, coverUrl: performer.image_url,
+        artistHasOwnRelease: hasOwnRelease, artistNameConflict: nameConflict,
+      }),
     };
   }
 

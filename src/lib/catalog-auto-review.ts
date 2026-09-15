@@ -3,6 +3,8 @@ import { isPossibleAlbumEdition } from "./submission-moderation.ts";
 export type CatalogReviewCandidate = {
   type: "artist" | "album";
   title: string;
+  artistHasOwnRelease?: boolean;
+  artistNameConflict?: boolean;
   spotifyAlbumType?: string;
   totalTracks?: number;
   coverUrl?: string | null;
@@ -24,10 +26,24 @@ export function reviewCatalogSubmission(
   submittedSpotifyId = "",
 ): CatalogAutoReview {
   if (candidate.type === "artist") {
+    const reasons: string[] = [];
+    let riskScore = 0;
+    if (!candidate.coverUrl) {
+      riskScore += 30;
+      reasons.push("Spotify nie zwróciło zdjęcia artysty.");
+    }
+    if (!candidate.artistHasOwnRelease) {
+      riskScore += 70;
+      reasons.push("Nie znaleziono wydawnictwa, na którym zgłoszony artysta jest głównym wykonawcą.");
+    }
+    if (candidate.artistNameConflict) {
+      riskScore += 90;
+      reasons.push("W katalogu istnieje inny profil Spotify o tej samej nazwie.");
+    }
     return {
-      autoApprove: false,
-      riskScore: 40,
-      reasons: ["Zgłoszenie obejmuje profil artysty i całą dyskografię, dlatego wymaga decyzji administratora."],
+      autoApprove: reasons.length === 0,
+      riskScore: Math.min(100, riskScore),
+      reasons,
       releaseKind: null,
     };
   }
