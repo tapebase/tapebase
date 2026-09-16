@@ -23,7 +23,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
 .mobile-nav-scroll {
+  overscroll-behavior-inline: contain;
   scrollbar-width: none;
 }
 
