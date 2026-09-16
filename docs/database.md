@@ -420,6 +420,9 @@ Funkcja `following_activity` zwraca zalogowanemu użytkownikowi oceny, komentarz
 zaimportowane albumy osób, które obserwuje. Strumień jest obliczany z istniejących
 danych i nie tworzy kopii aktywności.
 
+Nowe obserwowanie tworzy powiadomienie `new_follower` z identyfikatorem obserwującej
+osoby. Ponowne obserwowanie odświeża istniejący wpis zamiast tworzyć duplikat.
+
 ---
 
 ## catalog_import_jobs i catalog_import_items

@@ -4,17 +4,13 @@ import type { Album, Artist } from "@/lib/catalog";
 import { pageSize } from "@/lib/catalog";
 import { albumPath, artistPath, orderedArtists, releaseDate } from "@/lib/catalog-format";
 import { getViewer } from "@/lib/auth";
-import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { FeedbackLink } from "@/components/feedback-link";
 import { BrandLogo } from "@/components/brand-logo";
+import { UserMenu } from "@/components/user-menu";
 
 function BellIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>;
-}
-
-function UserIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>;
 }
 
 function NotificationLink({ count }: { count: number }) {
@@ -22,18 +18,6 @@ function NotificationLink({ count }: { count: number }) {
     <BellIcon />
     {count > 0 && <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white">{count > 99 ? "99+" : count}</span>}
   </Link>;
-}
-
-function UserMenu({ username, role }: { username: string; role: string }) {
-  return <details className="relative">
-    <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full hover:bg-zinc-100" aria-label={`Menu użytkownika @${username}`} title={`Profil @${username}`}><UserIcon /></summary>
-    <div className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-zinc-200 bg-white p-2 text-sm shadow-xl">
-      <p className="truncate px-3 py-2 text-xs font-bold text-zinc-500">@{username}</p>
-      <Link href="/profil" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-zinc-100">Twój profil</Link>
-      {role === "admin" && <Link href="/admin/zgloszenia" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-zinc-100">Administracja</Link>}
-      <form action={signOut}><button className="w-full rounded-xl px-3 py-2.5 text-left text-zinc-600 hover:bg-zinc-100">Wyloguj się</button></form>
-    </div>
-  </details>;
 }
 
 export async function Header() {

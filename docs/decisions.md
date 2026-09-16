@@ -272,3 +272,5 @@
   osób, z bezpośrednimi linkami do profilu i elementu katalogu.
 - Blokada usuwa obserwowanie w obu kierunkach i nie pozwala utworzyć go ponownie do
   czasu odblokowania. Wszystkie mutacje przechodzą przez kontrolowane funkcje RPC.
+- Nowe obserwowanie pojawia się w dzwonku i prowadzi bezpośrednio do profilu osoby,
+  która zaczęła obserwować.

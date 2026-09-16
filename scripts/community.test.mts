@@ -31,6 +31,7 @@ const artistBiographiesMigration = await readFile(new URL("../supabase/migration
 const removeArtistBiographiesMigration = await readFile(new URL("../supabase/migrations/202609130026_remove_artist_biographies.sql", import.meta.url), "utf8");
 const artistCommentsMigration = await readFile(new URL("../supabase/migrations/202609130030_artist_comments.sql", import.meta.url), "utf8");
 const userFollowsMigration = await readFile(new URL("../supabase/migrations/202609160033_user_follows.sql", import.meta.url), "utf8");
+const followerNotificationsMigration = await readFile(new URL("../supabase/migrations/202609160034_follower_notifications.sql", import.meta.url), "utf8");
 const draftSchema = `
   create role anon;
   create role authenticated;
@@ -170,6 +171,7 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(removeArtistBiographiesMigration);
     await db.exec(artistCommentsMigration);
     await db.exec(userFollowsMigration);
+    await db.exec(followerNotificationsMigration);
     assert.deepEqual((await db.query("select distinct country_code from public.artists")).rows, [{ country_code: "PL" }]);
     assert.deepEqual((await db.query("select distinct genre from public.albums")).rows, [{ genre: "rap" }]);
 
@@ -180,6 +182,9 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     const relationship = (await db.query<{ state: { following: boolean } }>("select public.user_relationship_state($1) as state", [bob])).rows[0].state;
     assert.equal(relationship.following, true);
     await db.exec("reset role");
+    assert.deepEqual((await db.query("select user_id::text,actor_id::text,kind,read_at from public.notifications where kind='new_follower'")).rows, [
+      { user_id: bob, actor_id: alice, kind: "new_follower", read_at: null },
+    ]);
 
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [alice]);
     await db.exec("set role authenticated");

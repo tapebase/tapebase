@@ -7,6 +7,8 @@ type SubmissionRow = { id: number; spotify_type: "artist" | "album"; spotify_id:
 type NotificationRow = {
   id: number; kind: NotificationView["kind"]; message: string; read_at: string | null; created_at: string;
   comment_id: number | null;
+  actor_id: string | null;
+  actor: { username: string } | { username: string }[] | null;
   submission: SubmissionRow | SubmissionRow[] | null;
 };
 
@@ -16,12 +18,13 @@ const labels: Record<NotificationView["kind"], string> = {
   submission_rejected: "Odrzucone",
   comment_reply: "Nowa odpowiedź",
   comment_like: "Nowe polubienie",
+  new_follower: "Nowy obserwujący",
 };
 
 export async function getNotifications(userId: string, limit = 100): Promise<NotificationView[]> {
   const client = await createClient();
   const { data, error } = await client.from("notifications")
-    .select("id,kind,message,read_at,created_at,comment_id,submission:catalog_submissions(id,spotify_type,spotify_id,rejection_reason)")
+    .select("id,kind,message,read_at,created_at,comment_id,actor_id,actor:users!notifications_actor_id_fkey(username),submission:catalog_submissions(id,spotify_type,spotify_id,rejection_reason)")
     .eq("user_id", userId).order("created_at", { ascending: false }).limit(limit);
   if (error) throw new Error("Nie udało się pobrać powiadomień.");
   const rows = (data ?? []) as unknown as NotificationRow[];
@@ -48,12 +51,14 @@ export async function getNotifications(userId: string, limit = 100): Promise<Not
   }));
   return rows.map(row => {
     const submission = Array.isArray(row.submission) ? row.submission[0] : row.submission;
+    const actor = Array.isArray(row.actor) ? row.actor[0] : row.actor;
     const catalogHref = submission?.spotify_type === "album" ? albumLinks.get(submission.spotify_id)
       : submission ? artistLinks.get(submission.spotify_id) : undefined;
     return {
       id: row.id, kind: row.kind, message: row.message, read_at: row.read_at, created_at: row.created_at,
       statusLabel: labels[row.kind], rejectionReason: row.kind === "submission_rejected" ? submission?.rejection_reason ?? null : null,
-      href: row.comment_id ? commentLinks.get(row.comment_id) ?? "/powiadomienia"
+      href: row.kind === "new_follower" && actor ? `/u/${encodeURIComponent(actor.username)}`
+        : row.comment_id ? commentLinks.get(row.comment_id) ?? "/powiadomienia"
         : row.kind === "submission_imported" && catalogHref ? catalogHref : `/zglos#zgloszenie-${submission?.id ?? ""}`,
     };
   });
