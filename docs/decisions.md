@@ -263,3 +263,12 @@
   Nie tworzymy drugiego systemu kolejek ani równoległego modelu statusów.
 - Zatwierdzenie tworzy trwałe zadanie przed bezpośrednią próbą importu. Dzięki temu
   błąd sieci lub limit Spotify nie gubi zgłoszenia i administrator może je wznowić.
+
+## Obserwowanie użytkowników (2026-09-16)
+
+- Relacja jest jednostronna: użytkownik obserwuje profil bez wysyłania zaproszenia.
+- Publiczny profil pokazuje liczbę i listę obserwujących oraz obserwowanych.
+- Prywatny profil zawiera strumień ocen, komentarzy i dodanych albumów obserwowanych
+  osób, z bezpośrednimi linkami do profilu i elementu katalogu.
+- Blokada usuwa obserwowanie w obu kierunkach i nie pozwala utworzyć go ponownie do
+  czasu odblokowania. Wszystkie mutacje przechodzą przez kontrolowane funkcje RPC.

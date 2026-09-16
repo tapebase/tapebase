@@ -405,7 +405,20 @@ notatką oraz powodem odrzucenia. Tabelę mogą odczytać wyłącznie administra
 Planowane tabele:
 
 * artist_followers
-* user_followers
+
+---
+
+## user_follows i user_blocks
+
+`user_follows` przechowuje jednostronne obserwowanie profili. Lista oraz liczba
+obserwujących i obserwowanych są publiczne. Zapis odbywa się wyłącznie przez funkcje
+RPC sprawdzające aktywne konto i blokady.
+
+`user_blocks` przechowuje prywatne blokady. Założenie blokady usuwa obserwowanie w
+obu kierunkach i uniemożliwia jego ponowne utworzenie do chwili odblokowania.
+Funkcja `following_activity` zwraca zalogowanemu użytkownikowi oceny, komentarze i
+zaimportowane albumy osób, które obserwuje. Strumień jest obliczany z istniejących
+danych i nie tworzy kopii aktywności.
 
 ---
 

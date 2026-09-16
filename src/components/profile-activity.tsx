@@ -24,13 +24,15 @@ export function ProfileHero({ activity, email, own = false }: { activity: Public
         {own && <div className="mt-4 flex flex-wrap gap-3"><Link href="/zglos" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white">Zgłoś album / artystę</Link><Link href={`/u/${profile.username}`} className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold">Zobacz profil publiczny →</Link></div>}
       </div>
     </div>
-    <dl className="mt-7 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-6">
+    <dl className="mt-7 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-8">
       <div className="flex min-h-24 min-w-0 flex-col justify-between rounded-2xl bg-zinc-50 p-3 sm:p-4"><dt className="text-xs leading-tight text-zinc-500 sm:text-sm">Średnia ocen</dt><dd className="mt-1 text-2xl font-black sm:text-3xl">{activity.averageRating === null ? "—" : activity.averageRating.toFixed(1)}</dd></div>
       <div className="flex min-h-24 min-w-0 flex-col justify-between rounded-2xl bg-zinc-50 p-3 sm:p-4"><dt className="text-xs leading-tight text-zinc-500 sm:text-sm">Liczba ocen</dt><dd className="mt-1 text-2xl font-black sm:text-3xl">{activity.ratingCount}</dd></div>
       <div className="flex min-h-24 min-w-0 flex-col justify-between rounded-2xl bg-zinc-50 p-3 sm:p-4"><dt className="text-xs leading-tight text-zinc-500 sm:text-sm">Przesłuchane</dt><dd className="mt-1 text-2xl font-black sm:text-3xl">{activity.listenedCount}</dd></div>
       <div className="flex min-h-24 min-w-0 flex-col justify-between rounded-2xl bg-zinc-50 p-3 sm:p-4"><dt className="text-xs leading-tight text-zinc-500 sm:text-sm">Komentarze</dt><dd className="mt-1 text-2xl font-black sm:text-3xl">{activity.commentCount}</dd></div>
       <div className="flex min-h-24 min-w-0 flex-col justify-between rounded-2xl bg-zinc-50 p-3 sm:p-4"><dt className="text-xs leading-tight text-zinc-500 sm:text-sm">Dodane albumy</dt><dd className="mt-1 text-2xl font-black sm:text-3xl">{activity.addedAlbumCount}</dd></div>
       <div className="flex min-h-24 min-w-0 flex-col justify-between rounded-2xl bg-zinc-50 p-3 sm:p-4"><dt className="text-xs leading-tight text-zinc-500 sm:text-sm">Dodane biografie</dt><dd className="mt-1 text-2xl font-black sm:text-3xl">{activity.addedBiographyCount}</dd></div>
+      <div className="flex min-h-24 min-w-0 flex-col justify-between rounded-2xl bg-zinc-50 p-3 sm:p-4"><dt className="text-xs leading-tight text-zinc-500 sm:text-sm">Obserwujący</dt><dd className="mt-1 text-2xl font-black sm:text-3xl">{activity.followerCount}</dd></div>
+      <div className="flex min-h-24 min-w-0 flex-col justify-between rounded-2xl bg-zinc-50 p-3 sm:p-4"><dt className="text-xs leading-tight text-zinc-500 sm:text-sm">Obserwowani</dt><dd className="mt-1 text-2xl font-black sm:text-3xl">{activity.followingCount}</dd></div>
     </dl>
   </section>;
 }

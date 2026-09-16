@@ -51,6 +51,12 @@ export type ProfileListened = {
   album: ProfileAlbum;
 };
 
+export type ProfileFollowUser = {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+};
+
 export type PublicProfileActivity = {
   profile: PublicUser;
   albumRatings: ProfileAlbumRating[];
@@ -62,6 +68,10 @@ export type PublicProfileActivity = {
   listenedCount: number;
   addedAlbumCount: number;
   addedBiographyCount: number;
+  followers: ProfileFollowUser[];
+  following: ProfileFollowUser[];
+  followerCount: number;
+  followingCount: number;
   averageRating: number | null;
 };
 
@@ -77,13 +87,14 @@ type RawComment = {
   artists: Related<Pick<ProfileArtist, "id" | "name" | "slug">>;
 };
 type RawListened = { created_at: string; albums: Related<ProfileAlbum> };
+type RawFollow = { users: Related<ProfileFollowUser> };
 
 async function profileActivity(profileResult: { data: PublicUser | null; error: unknown }): Promise<PublicProfileActivity | null> {
   if (profileResult.error) throw new Error("Nie udało się pobrać profilu użytkownika.");
   if (!profileResult.data) return null;
   const profile = profileResult.data;
   const client = catalogClient();
-  const [albumRatingsResult, artistRatingsResult, commentsResult, listenedResult, addedAlbumsResult, addedBiographiesResult] = await Promise.all([
+  const [albumRatingsResult, artistRatingsResult, commentsResult, listenedResult, addedAlbumsResult, addedBiographiesResult, followersResult, followingResult] = await Promise.all([
     client.from("ratings")
       .select("rating,updated_at,albums(id,title,slug,cover_url)", { count: "exact" })
       .eq("user_id", profile.id)
@@ -102,8 +113,14 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
       .eq("user_id", profile.id).order("created_at", { ascending: false }).limit(100),
     client.rpc("imported_album_count", { profile_id: profile.id }),
     client.rpc("accepted_biography_count", { profile_id: profile.id }),
+    client.from("user_follows")
+      .select("users!user_follows_follower_id_fkey(id,username,avatar_url)", { count: "exact" })
+      .eq("followed_id", profile.id).order("created_at", { ascending: false }).limit(24),
+    client.from("user_follows")
+      .select("users!user_follows_followed_id_fkey(id,username,avatar_url)", { count: "exact" })
+      .eq("follower_id", profile.id).order("created_at", { ascending: false }).limit(24),
   ]);
-  if (albumRatingsResult.error || artistRatingsResult.error || commentsResult.error || listenedResult.error || addedAlbumsResult.error || addedBiographiesResult.error) {
+  if (albumRatingsResult.error || artistRatingsResult.error || commentsResult.error || listenedResult.error || addedAlbumsResult.error || addedBiographiesResult.error || followersResult.error || followingResult.error) {
     throw new Error("Nie udało się pobrać aktywności użytkownika.");
   }
 
@@ -125,6 +142,14 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
     return album ? [{ created_at: row.created_at, album }] : [];
   });
   const ratingValues = [...albumRatings.map(row => row.rating), ...artistRatings.map(row => row.rating)];
+  const followers = ((followersResult.data ?? []) as unknown as RawFollow[]).flatMap(row => {
+    const user = one(row.users);
+    return user ? [user] : [];
+  });
+  const following = ((followingResult.data ?? []) as unknown as RawFollow[]).flatMap(row => {
+    const user = one(row.users);
+    return user ? [user] : [];
+  });
 
   return {
     profile,
@@ -137,6 +162,10 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
     listenedCount: listenedResult.count ?? listened.length,
     addedAlbumCount: Number(addedAlbumsResult.data ?? 0),
     addedBiographyCount: Number(addedBiographiesResult.data ?? 0),
+    followers,
+    following,
+    followerCount: followersResult.count ?? followers.length,
+    followingCount: followingResult.count ?? following.length,
     averageRating: ratingValues.length ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length : null,
   };
 }
