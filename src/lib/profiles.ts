@@ -86,10 +86,14 @@ async function profileActivity(profileResult: { data: PublicUser | null; error: 
   const [albumRatingsResult, artistRatingsResult, commentsResult, listenedResult, addedAlbumsResult, addedBiographiesResult] = await Promise.all([
     client.from("ratings")
       .select("rating,updated_at,albums(id,title,slug,cover_url)", { count: "exact" })
-      .eq("user_id", profile.id).order("updated_at", { ascending: false }),
+      .eq("user_id", profile.id)
+      .order("rating", { ascending: false })
+      .order("updated_at", { ascending: false }),
     client.from("artist_ratings")
       .select("rating,updated_at,artists(id,name,slug,image_url)", { count: "exact" })
-      .eq("user_id", profile.id).order("updated_at", { ascending: false }),
+      .eq("user_id", profile.id)
+      .order("rating", { ascending: false })
+      .order("updated_at", { ascending: false }),
     client.from("comments")
       .select("id,content,created_at,updated_at,albums(id,title,slug),artists(id,name,slug)", { count: "exact" })
       .eq("user_id", profile.id).order("created_at", { ascending: false }).limit(100),
