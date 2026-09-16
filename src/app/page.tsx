@@ -19,7 +19,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
   return <main>
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="rounded-3xl bg-white p-5 shadow-sm sm:p-8">
-        <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">Oceniaj i odkrywaj albumy oraz artystów.</h1>
+        <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">Oceniaj i odkrywaj albumy oraz artystów. Twórz własny i globalny ranking.</h1>
         <p className="mt-5 text-lg text-zinc-600">Album jest głównym bohaterem.</p>
         <SearchForm action="/" query={q} label="Szukaj albumu lub artysty…" />
       </div>
