@@ -12,7 +12,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
   const activity = await getPublicProfileByUsername(username);
   if (!activity) notFound();
 
-  return <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-12">
+  return <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
     <ProfileHero activity={activity} />
     <ProfileActivitySections activity={activity} />
   </main>;

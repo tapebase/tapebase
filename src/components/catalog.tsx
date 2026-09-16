@@ -8,6 +8,21 @@ import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { FeedbackLink } from "@/components/feedback-link";
 
+function BellIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>;
+}
+
+function UserIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>;
+}
+
+function NotificationLink({ count }: { count: number }) {
+  return <Link href="/powiadomienia" aria-label={count > 0 ? `Powiadomienia: ${count} nieprzeczytanych` : "Powiadomienia"} title="Powiadomienia" className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full hover:bg-zinc-100">
+    <BellIcon />
+    {count > 0 && <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white">{count > 99 ? "99+" : count}</span>}
+  </Link>;
+}
+
 export async function Header() {
   const viewer = await getViewer();
   let unreadNotifications = 0;
@@ -18,11 +33,25 @@ export async function Header() {
     unreadNotifications = count ?? 0;
   }
   return <header className="border-b border-zinc-200 bg-white">
-    <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-5">
-      <Link href="/" className="text-2xl font-black tracking-tight">TAPEBASE</Link>
-      <nav aria-label="Menu główne" className="flex flex-wrap items-center gap-5 text-sm font-semibold">
+    <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:gap-6 lg:px-6 lg:py-5">
+      <div className="flex w-full items-center justify-between lg:w-auto">
+        <Link href="/" className="text-2xl font-black tracking-tight">TAPEBASE</Link>
+        <div className="flex items-center gap-1 lg:hidden">
+          {viewer ? <><NotificationLink count={unreadNotifications} /><details className="relative">
+            <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full hover:bg-zinc-100" aria-label={`Menu użytkownika @${viewer.username}`} title={`Profil @${viewer.username}`}><UserIcon /></summary>
+            <div className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-zinc-200 bg-white p-2 text-sm shadow-xl">
+              <p className="truncate px-3 py-2 text-xs font-bold text-zinc-500">@{viewer.username}</p>
+              <Link href="/profil" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-zinc-100">Twój profil</Link>
+              {viewer.role === "admin" && <Link href="/admin/zgloszenia" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-zinc-100">Administracja</Link>}
+              <form action={signOut}><button className="w-full rounded-xl px-3 py-2.5 text-left text-zinc-600 hover:bg-zinc-100">Wyloguj się</button></form>
+            </div>
+          </details></> : <Link href="/login" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white">Zaloguj się</Link>}
+        </div>
+      </div>
+      <nav aria-label="Menu główne" className="mobile-nav-scroll -mx-4 flex w-[calc(100%+2rem)] items-center gap-5 overflow-x-auto px-4 pb-1 text-sm font-semibold whitespace-nowrap lg:mx-0 lg:w-auto lg:flex-1 lg:justify-center lg:overflow-visible lg:px-0 lg:pb-0">
         <Link href="/album">Albumy</Link><Link href="/artist">Artyści</Link>
-        <div className="group relative">
+        <Link href="/rankingi" className="lg:hidden">Rankingi</Link>
+        <div className="group relative hidden lg:block">
           <Link href="/rankingi" className="inline-flex items-center gap-1 py-2" aria-haspopup="true">Rankingi <span aria-hidden="true" className="text-xs">▾</span></Link>
           <div className="invisible absolute left-1/2 top-full z-50 w-48 -translate-x-1/2 pt-2 opacity-0 transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
             <div className="rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
@@ -34,10 +63,7 @@ export async function Header() {
         <Link href="/#ostatnio-dodane">Ostatnio dodane</Link>
         <Link href="/zglos">Zgłoś album / artystę</Link>
         {viewer && <FeedbackLink />}
-      </nav>{viewer ? <div className="flex items-center gap-4 text-sm">{viewer.role === "admin" && <Link href="/admin/zgloszenia" className="font-bold">Administracja</Link>}<Link href="/powiadomienia" aria-label={unreadNotifications > 0 ? `Powiadomienia: ${unreadNotifications} nieprzeczytanych` : "Powiadomienia"} title="Powiadomienia" className="relative inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-zinc-100">
-        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
-        {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
-      </Link><Link href="/profil" className="font-bold">@{viewer.username}</Link><form action={signOut}><button className="text-zinc-600 hover:underline">Wyloguj</button></form></div> : <Link href="/login" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white">Zaloguj się</Link>}
+      </nav>{viewer ? <div className="hidden shrink-0 items-center gap-2 text-sm lg:flex">{viewer.role === "admin" && <Link href="/admin/zgloszenia" className="mr-1 font-bold">Administracja</Link>}<NotificationLink count={unreadNotifications} /><Link href="/profil" aria-label={`Twój profil: @${viewer.username}`} title={`Profil @${viewer.username}`} className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-zinc-100"><UserIcon /></Link><form action={signOut}><button className="ml-1 text-zinc-600 hover:underline">Wyloguj</button></form></div> : <Link href="/login" className="hidden shrink-0 rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white lg:inline-flex">Zaloguj się</Link>}
     </div>
   </header>;
 }
@@ -45,7 +71,7 @@ export function Artwork({ src, alt, className = "", priority = false, variant = 
   src: string | null; alt: string; className?: string; priority?: boolean; variant?: "default" | "artistProfile";
 }) {
   const artistProfile = variant === "artistProfile";
-  return <div className={`relative overflow-hidden ${artistProfile ? "h-56 w-56 shrink-0 self-start" : "aspect-square rounded-lg bg-zinc-100"} ${className}`}>
+  return <div className={`relative max-w-full overflow-hidden ${artistProfile ? "h-56 w-56 shrink-0 self-start" : "aspect-square w-full rounded-lg bg-zinc-100"} ${className}`}>
     {src ? <Image src={src} alt={alt} fill unoptimized loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} className={artistProfile ? "object-cover" : "object-contain"} sizes={artistProfile ? "224px" : "(max-width: 640px) 90vw, 320px"} />
       : <div role="img" aria-label={alt} className="flex h-full items-center justify-center p-3 text-center text-sm text-zinc-500">Brak grafiki</div>}
   </div>;

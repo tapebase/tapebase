@@ -17,15 +17,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
     q ? Promise.resolve([]) : getMostActiveUsers(10, 30),
   ]);
   return <main>
-    <section className="mx-auto max-w-7xl px-6 py-12">
-      <div className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="rounded-3xl bg-white p-5 shadow-sm sm:p-8">
         <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">Oceniaj i odkrywaj albumy. Twórz własny i globalny ranking.</h1>
         <p className="mt-5 text-lg text-zinc-600">Album jest głównym bohaterem.</p>
         <SearchForm action="/" query={q} label="Szukaj albumu lub artysty…" />
       </div>
     </section>
-    {!q && <section className="mx-auto max-w-7xl px-6 pb-8" aria-labelledby="recently-rated-heading">
-      <div className="rounded-3xl bg-white p-6 shadow-sm">
+    {!q && <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6" aria-labelledby="recently-rated-heading">
+      <div className="min-w-0 overflow-hidden rounded-3xl bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 id="recently-rated-heading" className="text-2xl font-black">Najczęściej oceniane ostatnio</h2>
@@ -33,10 +33,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           </div>
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Top 10</span>
         </div>
-        {recentlyRated.length ? <ol className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {recentlyRated.map((album, index) => <li key={album.id} className="relative rounded-2xl border border-zinc-100 p-4">
+        {recentlyRated.length ? <ol className="mt-6 grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {recentlyRated.map((album, index) => <li key={album.id} className="relative min-w-0 overflow-hidden rounded-2xl border border-zinc-100 p-3 sm:p-4">
             <span className="absolute left-2 top-2 z-10 flex h-8 min-w-8 items-center justify-center rounded-full bg-zinc-950 px-2 text-sm font-black text-white shadow">{index + 1}</span>
-            <Link href={albumPath(album)} aria-label={`Album: ${album.title}`}>
+            <Link href={albumPath(album)} aria-label={`Album: ${album.title}`} className="block min-w-0 max-w-full">
               <Artwork src={album.cover_url} alt={`Okładka albumu ${album.title}`} />
               <h3 className="mt-4 truncate font-black hover:underline">{album.title}</h3>
             </Link>
@@ -48,8 +48,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
         </ol> : <p className="mt-5 rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-600">W ostatnich 7 dniach nie dodano jeszcze żadnej oceny.</p>}
       </div>
     </section>}
-    <section id="ostatnio-dodane" className="mx-auto max-w-7xl px-6 pb-16">
-      <div className="min-w-0 rounded-3xl bg-white p-6 shadow-sm">
+    <section id="ostatnio-dodane" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
+      <div className="min-w-0 rounded-3xl bg-white p-4 shadow-sm sm:p-6">
         {artists && <div className="mb-8">
           <h2 className="mb-4 text-2xl font-black">Artyści: {q}</h2>
           {artists.rows.length ? <div className="grid gap-4 sm:grid-cols-2">{artists.rows.map(artist => <ArtistCard key={artist.id} artist={artist} />)}</div>

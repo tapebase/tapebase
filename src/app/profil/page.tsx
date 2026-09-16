@@ -34,7 +34,7 @@ export default async function ProfilePage() {
     return album ? [{ created_at: row.created_at, album }] : [];
   });
 
-  return <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-12">
+  return <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
     <ProfileHero activity={activity} email={viewer.email} own />
     <div className="mt-6 grid gap-6 lg:grid-cols-2">
       <ProfileSettings username={activity.profile.username} avatarUrl={activity.profile.avatar_url} />
