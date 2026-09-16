@@ -39,6 +39,22 @@ body {
   display: none;
 }
 
+.brand-logo-dark-theme {
+  display: none;
+}
+
+.brand-logo-light-theme {
+  display: block;
+}
+
+html.dark .brand-logo-dark-theme {
+  display: block;
+}
+
+html.dark .brand-logo-light-theme {
+  display: none;
+}
+
 :focus-visible {
   outline: 3px solid #52525b;
   outline-offset: 4px;
