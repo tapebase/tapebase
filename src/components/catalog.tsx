@@ -24,6 +24,18 @@ function NotificationLink({ count }: { count: number }) {
   </Link>;
 }
 
+function UserMenu({ username, role }: { username: string; role: string }) {
+  return <details className="relative">
+    <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full hover:bg-zinc-100" aria-label={`Menu użytkownika @${username}`} title={`Profil @${username}`}><UserIcon /></summary>
+    <div className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-zinc-200 bg-white p-2 text-sm shadow-xl">
+      <p className="truncate px-3 py-2 text-xs font-bold text-zinc-500">@{username}</p>
+      <Link href="/profil" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-zinc-100">Twój profil</Link>
+      {role === "admin" && <Link href="/admin/zgloszenia" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-zinc-100">Administracja</Link>}
+      <form action={signOut}><button className="w-full rounded-xl px-3 py-2.5 text-left text-zinc-600 hover:bg-zinc-100">Wyloguj się</button></form>
+    </div>
+  </details>;
+}
+
 export async function Header() {
   const viewer = await getViewer();
   let unreadNotifications = 0;
@@ -38,15 +50,7 @@ export async function Header() {
       <div className="flex w-full items-center justify-between lg:w-auto">
         <BrandLogo />
         <div className="flex items-center gap-1 lg:hidden">
-          {viewer ? <><NotificationLink count={unreadNotifications} /><details className="relative">
-            <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full hover:bg-zinc-100" aria-label={`Menu użytkownika @${viewer.username}`} title={`Profil @${viewer.username}`}><UserIcon /></summary>
-            <div className="absolute right-0 top-12 z-50 w-52 rounded-2xl border border-zinc-200 bg-white p-2 text-sm shadow-xl">
-              <p className="truncate px-3 py-2 text-xs font-bold text-zinc-500">@{viewer.username}</p>
-              <Link href="/profil" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-zinc-100">Twój profil</Link>
-              {viewer.role === "admin" && <Link href="/admin/zgloszenia" className="block rounded-xl px-3 py-2.5 font-semibold hover:bg-zinc-100">Administracja</Link>}
-              <form action={signOut}><button className="w-full rounded-xl px-3 py-2.5 text-left text-zinc-600 hover:bg-zinc-100">Wyloguj się</button></form>
-            </div>
-          </details></> : <Link href="/login" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white">Zaloguj się</Link>}
+          {viewer ? <><NotificationLink count={unreadNotifications} /><UserMenu username={viewer.username} role={viewer.role} /></> : <Link href="/login" className="rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white">Zaloguj się</Link>}
         </div>
       </div>
       <nav aria-label="Menu główne" className="mobile-nav-scroll -mx-4 flex w-[calc(100%+2rem)] items-center gap-5 overflow-x-auto px-4 pb-1 text-sm font-semibold whitespace-nowrap lg:mx-0 lg:w-auto lg:flex-1 lg:justify-center lg:overflow-visible lg:px-0 lg:pb-0">
@@ -64,7 +68,7 @@ export async function Header() {
         <Link href="/#ostatnio-dodane">Ostatnio dodane</Link>
         <Link href="/zglos">Zgłoś album / artystę</Link>
         {viewer && <FeedbackLink />}
-      </nav>{viewer ? <div className="hidden shrink-0 items-center gap-2 text-sm lg:flex">{viewer.role === "admin" && <Link href="/admin/zgloszenia" className="mr-1 font-bold">Administracja</Link>}<NotificationLink count={unreadNotifications} /><Link href="/profil" aria-label={`Twój profil: @${viewer.username}`} title={`Profil @${viewer.username}`} className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-zinc-100"><UserIcon /></Link><form action={signOut}><button className="ml-1 text-zinc-600 hover:underline">Wyloguj</button></form></div> : <Link href="/login" className="hidden shrink-0 rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white lg:inline-flex">Zaloguj się</Link>}
+      </nav>{viewer ? <div className="hidden shrink-0 items-center gap-1 lg:flex"><NotificationLink count={unreadNotifications} /><UserMenu username={viewer.username} role={viewer.role} /></div> : <Link href="/login" className="hidden shrink-0 rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white lg:inline-flex">Zaloguj się</Link>}
     </div>
   </header>;
 }
