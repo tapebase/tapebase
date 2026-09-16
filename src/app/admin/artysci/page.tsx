@@ -18,6 +18,16 @@ type Candidate = {
   artist: { id: number; name: string | null; slug: string | null; spotify_id: string | null } | null;
 };
 
+type EnrichmentArtist = {
+  id: number;
+  name: string | null;
+  slug: string | null;
+  spotify_id: string | null;
+  enrichment_status: string;
+  enrichment_checked_at: string | null;
+  enrichment_error: string | null;
+};
+
 const statusLabels: Record<string, string> = {
   pending: "Do sprawdzenia", running: "W trakcie", enriched: "Uzupełnieni",
   review: "Weryfikacja ręczna", not_found: "Brak dopasowania", failed: "Błąd",
@@ -27,21 +37,35 @@ function value(data: Record<string, unknown>, key: string) {
   return typeof data[key] === "string" && data[key] ? String(data[key]) : "—";
 }
 
-export default async function AdminArtistsPage() {
+function selectedStatus(value: string | string[] | undefined) {
+  const status = Array.isArray(value) ? value[0] : value;
+  return status && status in statusLabels ? status : null;
+}
+
+const checkedAt = new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium", timeStyle: "short" });
+
+export default async function AdminArtistsPage({ searchParams }: { searchParams: Promise<{ status?: string | string[] }> }) {
   const viewer = await getViewer();
   if (!viewer) redirect("/login?next=%2Fadmin%2Fartysci");
   if (viewer.role !== "admin") notFound();
+  const statusFilter = selectedStatus((await searchParams).status);
   const client = await createClient();
-  const [artistsResult, candidatesResult] = await Promise.all([
+  const [artistsResult, candidatesResult, filteredArtistsResult] = await Promise.all([
     client.from("artists").select("enrichment_status").eq("catalog_visible", true),
     client.from("artist_enrichment_candidates")
       .select("id,source,source_id,source_url,confidence,candidate_data,match_evidence,artist:artists!artist_enrichment_candidates_artist_id_fkey(id,name,slug,spotify_id)")
       .eq("status", "pending").order("created_at").limit(100).returns<Candidate[]>(),
+    statusFilter
+      ? client.from("artists")
+        .select("id,name,slug,spotify_id,enrichment_status,enrichment_checked_at,enrichment_error")
+        .eq("catalog_visible", true).eq("enrichment_status", statusFilter).order("name").limit(200).returns<EnrichmentArtist[]>()
+      : Promise.resolve({ data: [] as EnrichmentArtist[], error: null }),
   ]);
-  if (artistsResult.error || candidatesResult.error) throw new Error("Nie udało się pobrać stanu danych artystów.");
+  if (artistsResult.error || candidatesResult.error || filteredArtistsResult.error) throw new Error("Nie udało się pobrać stanu danych artystów.");
   const statuses = new Map<string, number>();
   for (const row of artistsResult.data ?? []) statuses.set(row.enrichment_status, (statuses.get(row.enrichment_status) ?? 0) + 1);
   const candidates = candidatesResult.data ?? [];
+  const filteredArtists = filteredArtistsResult.data ?? [];
 
   return <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
     <header className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
@@ -62,9 +86,25 @@ export default async function AdminArtistsPage() {
         </form>
       </div>
       <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {Object.entries(statusLabels).map(([status, label]) => <div key={status} className="rounded-2xl bg-[#f6f4ef] p-4"><p className="text-xs font-bold uppercase tracking-wide text-zinc-500">{label}</p><p className="mt-1 text-3xl font-black">{statuses.get(status) ?? 0}</p></div>)}
+        {Object.entries(statusLabels).map(([status, label]) => <Link key={status} href={`/admin/artysci?status=${status}#lista-statusu`} aria-current={statusFilter === status ? "true" : undefined} className={`rounded-2xl p-4 transition hover:-translate-y-0.5 hover:shadow-md ${statusFilter === status ? "bg-zinc-950 text-white shadow-md" : "bg-[#f6f4ef]"}`}><p className={`text-xs font-bold uppercase tracking-wide ${statusFilter === status ? "text-zinc-300" : "text-zinc-500"}`}>{label}</p><p className="mt-1 text-3xl font-black underline decoration-2 underline-offset-4">{statuses.get(status) ?? 0}</p></Link>)}
       </div>
     </section>
+
+    {statusFilter && <section id="lista-statusu" className="mt-6 scroll-mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div><h2 className="text-2xl font-black">{statusLabels[statusFilter]}</h2><p className="mt-2 text-sm text-zinc-500">Artyści z wybranym statusem uzupełniania danych.</p></div>
+        <Link href="/admin/artysci" className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-bold hover:bg-zinc-100">Wyczyść filtr</Link>
+      </div>
+      {filteredArtists.length ? <div className="mt-6 divide-y divide-zinc-200 rounded-2xl border border-zinc-200">{filteredArtists.map(artist => <article key={artist.id} className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+        <div className="min-w-0">
+          <h3 className="font-black">{artist.name ?? `Artysta ${artist.id}`}</h3>
+          <p className="mt-1 text-xs text-zinc-500">Spotify ID: {artist.spotify_id ?? "brak"}{artist.enrichment_checked_at ? ` · sprawdzono ${checkedAt.format(new Date(artist.enrichment_checked_at))}` : " · jeszcze nie sprawdzono"}</p>
+          {artist.enrichment_error && <p className="mt-2 text-sm font-semibold text-red-700">{artist.enrichment_error}</p>}
+        </div>
+        {artist.slug && <Link href={`/artist/${artist.slug}`} className="text-sm font-bold underline">Otwórz profil</Link>}
+      </article>)}</div> : <p className="mt-6 rounded-2xl bg-[#f6f4ef] p-5 text-zinc-600">Brak artystów z tym statusem.</p>}
+      {filteredArtists.length === 200 && <p className="mt-4 text-xs text-zinc-500">Wyświetlono pierwsze 200 pozycji.</p>}
+    </section>}
 
     <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <h2 className="text-2xl font-black">Kandydaci do weryfikacji</h2>
