@@ -7,6 +7,7 @@ import { getViewer } from "@/lib/auth";
 import { signOut } from "@/app/login/actions";
 import { createClient } from "@/lib/supabase/server";
 import { FeedbackLink } from "@/components/feedback-link";
+import { BrandLogo } from "@/components/brand-logo";
 
 function BellIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>;
@@ -35,7 +36,7 @@ export async function Header() {
   return <header className="border-b border-zinc-200 bg-white">
     <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:gap-6 lg:px-6 lg:py-5">
       <div className="flex w-full items-center justify-between lg:w-auto">
-        <Link href="/" className="text-2xl font-black tracking-tight">TAPEBASE</Link>
+        <BrandLogo />
         <div className="flex items-center gap-1 lg:hidden">
           {viewer ? <><NotificationLink count={unreadNotifications} /><details className="relative">
             <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full hover:bg-zinc-100" aria-label={`Menu użytkownika @${viewer.username}`} title={`Profil @${viewer.username}`}><UserIcon /></summary>
