@@ -19,7 +19,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
   return <main>
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
       <div className="rounded-3xl bg-white p-5 shadow-sm sm:p-8">
-        <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">Oceniaj i odkrywaj albumy. Twórz własny i globalny ranking.</h1>
+        <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-5xl">Oceniaj i odkrywaj albumy oraz artystów.</h1>
         <p className="mt-5 text-lg text-zinc-600">Album jest głównym bohaterem.</p>
         <SearchForm action="/" query={q} label="Szukaj albumu lub artysty…" />
       </div>
@@ -53,7 +53,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
         {artists && <div className="mb-8">
           <h2 className="mb-4 text-2xl font-black">Artyści: {q}</h2>
           {artists.rows.length ? <div className="grid gap-4 sm:grid-cols-2">{artists.rows.map(artist => <ArtistCard key={artist.id} artist={artist} />)}</div>
-            : <Empty>Nie znaleziono artystów pasujących do zapytania.</Empty>}
+            : <Empty><span>Nie znaleziono artystów pasujących do zapytania.</span><span className="mt-2 block">Nie możesz znaleźć swojego artysty? <Link href="/zglos" className="font-semibold underline">Dodaj go tutaj.</Link></span></Empty>}
           <Link href={`/artist?q=${encodeURIComponent(q)}`} className="mt-5 inline-block text-sm font-semibold underline">Wszyscy pasujący artyści ({artists.count})</Link>
         </div>}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
