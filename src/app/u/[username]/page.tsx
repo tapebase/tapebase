@@ -3,7 +3,7 @@ import { ProfileActivitySections, ProfileHero } from "@/components/profile-activ
 import { getPublicProfileByUsername } from "@/lib/profiles";
 import { getViewer } from "@/lib/auth";
 import { getRelationshipState } from "@/lib/follows";
-import { ProfileConnections, ProfileFollowControls } from "@/components/profile-social";
+import { ProfileConnections, ProfileFollowButton, ProfileFollowControls } from "@/components/profile-social";
 
 export const metadata = {
   title: "Profil użytkownika",
@@ -19,7 +19,7 @@ export default async function PublicProfilePage({ params }: { params: Promise<{ 
     : null;
 
   return <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
-    <ProfileHero activity={activity} />
+    <ProfileHero activity={activity} followAction={relationship ? <ProfileFollowButton targetUserId={activity.profile.id} username={activity.profile.username} relationship={relationship} /> : null} />
     {relationship && <ProfileFollowControls targetUserId={activity.profile.id} username={activity.profile.username} relationship={relationship} />}
     <ProfileConnections followers={activity.followers} following={activity.following} />
     <ProfileActivitySections activity={activity} />

@@ -12,6 +12,21 @@ import {
 
 const date = new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium" });
 
+export function ProfileFollowButton({ targetUserId, username, relationship }: {
+  targetUserId: string;
+  username: string;
+  relationship: RelationshipState;
+}) {
+  if (relationship.blocked_by_you || relationship.blocked_you) return null;
+  const follow = followUserAction.bind(null, targetUserId, username);
+  const unfollow = unfollowUserAction.bind(null, targetUserId, username);
+  return <form action={relationship.following ? unfollow : follow}>
+    <button className={relationship.following ? "rounded-xl border border-zinc-300 px-4 py-2 text-sm font-bold" : "rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white"}>
+      {relationship.following ? "Przestań obserwować" : "Obserwuj"}
+    </button>
+  </form>;
+}
+
 export function ProfileFollowControls({
   targetUserId,
   username,
@@ -21,8 +36,6 @@ export function ProfileFollowControls({
   username: string;
   relationship: RelationshipState;
 }) {
-  const follow = followUserAction.bind(null, targetUserId, username);
-  const unfollow = unfollowUserAction.bind(null, targetUserId, username);
   const block = blockUserAction.bind(null, targetUserId, username);
   const unblock = unblockUserAction.bind(null, targetUserId, username);
 
@@ -32,11 +45,6 @@ export function ProfileFollowControls({
       <form action={unblock}><button className="rounded-xl border border-zinc-300 px-4 py-2 text-sm font-bold">Odblokuj</button></form>
     </> : relationship.blocked_you ?
       <p className="text-sm text-zinc-600">Nie możesz obserwować tego użytkownika.</p> : <>
-        <form action={relationship.following ? unfollow : follow}>
-          <button className={relationship.following ? "rounded-xl border border-zinc-300 px-4 py-2 text-sm font-bold" : "rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white"}>
-            {relationship.following ? "Przestań obserwować" : "Obserwuj"}
-          </button>
-        </form>
         {relationship.follows_you && <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600">Obserwuje Ciebie</span>}
         <form action={block} className="ml-auto"><button className="rounded-xl px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-50">Zablokuj</button></form>
       </>}

@@ -4,6 +4,7 @@ import { RatingStars } from "@/components/community-controls";
 import { UserAvatar } from "@/components/user-avatar";
 import type { PublicProfileActivity } from "@/lib/profiles";
 import { albumPath, artistPath } from "@/lib/catalog-format";
+import type { ReactNode } from "react";
 
 const date = new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium" });
 
@@ -11,7 +12,7 @@ function RatingValue({ value }: { value: number }) {
   return <div className="shrink-0 text-right"><strong className="text-xl font-black text-amber-600">{value.toFixed(1)}</strong><div className="hidden sm:block"><RatingStars value={value} size="small" label={`Ocena ${value.toFixed(1)} na 10`} /></div></div>;
 }
 
-export function ProfileHero({ activity, email, own = false }: { activity: PublicProfileActivity; email?: string | null; own?: boolean }) {
+export function ProfileHero({ activity, email, own = false, followAction }: { activity: PublicProfileActivity; email?: string | null; own?: boolean; followAction?: ReactNode }) {
   const { profile } = activity;
   return <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
     <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -20,7 +21,10 @@ export function ProfileHero({ activity, email, own = false }: { activity: Public
         <p className="text-sm font-bold uppercase tracking-widest text-zinc-500">{own ? "Twój profil" : "Profil użytkownika"}</p>
         <div className="mt-2 flex items-end justify-between gap-4">
           <h1 className="min-w-0 break-words text-4xl font-black">@{profile.username}</h1>
-          <div className="shrink-0 text-right"><strong className="text-2xl font-black">{activity.followerCount}</strong><span className="ml-2 text-sm font-semibold text-zinc-500">obserwujących</span></div>
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 text-right">
+            {followAction}
+            <div><strong className="text-2xl font-black">{activity.followerCount}</strong><span className="ml-2 text-sm font-semibold text-zinc-500">obserwujących</span></div>
+          </div>
         </div>
         {email && <p className="mt-2 text-zinc-500">{email}</p>}
         <p className="mt-3 text-sm text-zinc-500">W TAPEBASE od {date.format(new Date(profile.created_at))}</p>
