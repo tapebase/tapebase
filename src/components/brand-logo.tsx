@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export function BrandLogo() {
-  return <Link href="/" aria-label="TAPEBASE — strona główna" className="inline-flex shrink-0 rounded-lg bg-[#09090b] px-2 py-1.5">
+  return <Link href="/" aria-label="TAPEBASE — strona główna" className="inline-flex shrink-0">
     <Image
       src="/tapebase-logo.png"
       alt="TAPEBASE"
@@ -10,8 +10,8 @@ export function BrandLogo() {
       height={354}
       loading="eager"
       fetchPriority="high"
-      className="h-7 w-auto sm:h-8"
-      sizes="(max-width: 640px) 148px, 169px"
+      className="h-8 w-auto sm:h-9"
+      sizes="(max-width: 640px) 169px, 190px"
     />
   </Link>;
 }
