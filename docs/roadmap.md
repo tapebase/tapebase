@@ -71,6 +71,7 @@ Instrukcja: [spotify-import.md](spotify-import.md).
 * [x] Ranking Top 10 albumów według ocen
 * [x] Listened
 * [x] Want to listen
+* [x] Własne publiczne i prywatne listy albumów widoczne na profilach użytkowników
 
 ---
 

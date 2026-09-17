@@ -277,3 +277,14 @@
 - Po utworzeniu nowej relacji obserwowana osoba otrzymuje również transakcyjny e-mail
   z linkiem do profilu. Wysyłka odbywa się po stronie serwera przez Resend, a jej błąd
   nie cofa poprawnie zapisanej relacji ani powiadomienia w aplikacji.
+
+## Własne listy albumów (2026-09-17)
+
+- Lista należy do jednego użytkownika i może być publiczna albo prywatna.
+- Publiczne listy są widoczne na profilu autora i mają własny adres; prywatne listy
+  są dostępne wyłącznie właścicielowi po zalogowaniu.
+- Album dodaje się z jego strony. Ten sam album może należeć do wielu różnych list,
+  ale tylko raz do jednej konkretnej listy.
+- Pierwsza wersja zachowuje kolejność od ostatnio dodanych. Ręczne układanie pozycji
+  można dodać później bez zmiany modelu własności i prywatności.
+- Ograniczenia 50 list na konto i 500 albumów na listę chronią bazę przed nadużyciem.

@@ -33,6 +33,7 @@ const artistCommentsMigration = await readFile(new URL("../supabase/migrations/2
 const userFollowsMigration = await readFile(new URL("../supabase/migrations/202609160033_user_follows.sql", import.meta.url), "utf8");
 const followerNotificationsMigration = await readFile(new URL("../supabase/migrations/202609160034_follower_notifications.sql", import.meta.url), "utf8");
 const followEmailEventMigration = await readFile(new URL("../supabase/migrations/202609170035_follow_email_event.sql", import.meta.url), "utf8");
+const userAlbumListsMigration = await readFile(new URL("../supabase/migrations/202609170036_user_album_lists.sql", import.meta.url), "utf8");
 const draftSchema = `
   create role anon;
   create role authenticated;
@@ -174,11 +175,21 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(userFollowsMigration);
     await db.exec(followerNotificationsMigration);
     await db.exec(followEmailEventMigration);
+    await db.exec(userAlbumListsMigration);
     assert.deepEqual((await db.query("select distinct country_code from public.artists")).rows, [{ country_code: "PL" }]);
     assert.deepEqual((await db.query("select distinct genre from public.albums")).rows, [{ genre: "rap" }]);
 
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [alice]);
     await db.exec("set role authenticated");
+    const createdList = await db.query<{ id: bigint }>("insert into public.user_lists(user_id,name,description,is_public) values ($1,'Klasyka','Najważniejsze albumy',true) returning id", [alice]);
+    await db.query("insert into public.user_list_items(list_id,album_id) values ($1,1)", [createdList.rows[0].id]);
+    await db.query("insert into public.user_list_items(list_id,album_id) values ($1,1) on conflict do nothing", [createdList.rows[0].id]);
+    assert.equal((await db.query<{ count: number }>("select count(*)::integer as count from public.user_list_items where list_id=$1", [createdList.rows[0].id])).rows[0].count, 1);
+    assert.equal((await db.query<{ count: number }>("select count(*)::integer as count from public.user_lists where user_id=$1", [alice])).rows[0].count, 1);
+    assert.deepEqual((await db.query<{ policyname: string }>("select policyname from pg_policies where schemaname='public' and tablename in ('user_lists','user_list_items') order by policyname")).rows.map(row => row.policyname), [
+      "user_list_items_delete_own", "user_list_items_insert_own", "user_list_items_visible_read",
+      "user_lists_delete_own", "user_lists_insert_own", "user_lists_update_own", "user_lists_visible_read",
+    ]);
     assert.equal((await db.query<{ created: boolean }>("select public.follow_user($1) as created", [bob])).rows[0].created, true);
     assert.equal((await db.query<{ created: boolean }>("select public.follow_user($1) as created", [bob])).rows[0].created, false);
     assert.equal((await db.query<{ count: number }>("select count(*)::integer as count from public.user_follows where follower_id=$1 and followed_id=$2", [alice, bob])).rows[0].count, 1);

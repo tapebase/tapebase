@@ -450,6 +450,15 @@ jego zgłoszenia, a także o odpowiedzi i polubieniu komentarza. RLS pozwala odc
 i oznaczać jako przeczytane wyłącznie własne wpisy. Widok `/powiadomienia` prowadzi
 bezpośrednio do zaimportowanej pozycji, zgłoszenia albo właściwego komentarza.
 
+## user_lists i user_list_items
+
+Własne kolekcje albumów użytkowników. Lista ma nazwę, opcjonalny opis oraz ustawienie
+publiczna/prywatna. Publiczne listy i ich albumy są dostępne na profilu autora;
+prywatne odczytuje wyłącznie właściciel. `user_list_items` nie pozwala dodać tego
+samego albumu do jednej listy więcej niż raz. RLS ogranicza tworzenie, edycję i
+usuwanie do aktywnego właściciela. Jeden użytkownik może mieć maksymalnie 50 list,
+a jedna lista maksymalnie 500 albumów.
+
 ## user_feedback
 
 Prywatne zgłoszenia błędów, pomysłów i innych uwag od zalogowanych testerów. Autor

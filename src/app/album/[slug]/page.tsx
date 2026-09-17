@@ -8,6 +8,8 @@ import { getAlbumCommunity, getViewerAlbumState } from "@/lib/community";
 import { AlbumCommunitySection } from "@/components/album-community";
 import { AlbumRatingPanel } from "@/components/community-controls";
 import { genreLabel } from "@/lib/genres";
+import { getUserListChoices } from "@/lib/user-lists";
+import { AddAlbumToList } from "@/components/user-list-forms";
 
 type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props) {
@@ -19,10 +21,11 @@ export default async function AlbumPage({ params }: Props) {
   const album = await getAlbum(slug);
   if (!album) notFound();
   const viewer = await getViewer();
-  const [tracks, community, viewerState] = await Promise.all([
+  const [tracks, community, viewerState, userLists] = await Promise.all([
     getTracks(album.id),
     getAlbumCommunity(album.id, viewer),
     getViewerAlbumState(album.id, viewer),
+    viewer ? getUserListChoices(viewer.id, album.id) : Promise.resolve(null),
   ]);
   const discs = [...new Set(tracks.map(track => track.disc_number))];
   return <main className="mx-auto max-w-7xl px-6 py-12">
@@ -38,6 +41,7 @@ export default async function AlbumPage({ params }: Props) {
           canRate={Boolean(viewer)}
           returnPath={`/album/${slug}`}
         />
+        <AddAlbumToList albumId={album.id} lists={userLists} returnPath={`/album/${slug}`} />
         <div className="mt-4"><SpotifyLink type="album" id={album.spotify_id} /></div>
       </aside>
       <div className="min-w-0">

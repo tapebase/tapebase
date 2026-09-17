@@ -11,6 +11,8 @@ import { albumPath } from "@/lib/catalog-format";
 import { getFollowingActivity } from "@/lib/follows";
 import { FollowingActivity } from "@/components/following-activity";
 import { ProfileConnections } from "@/components/profile-social";
+import { getOwnUserLists } from "@/lib/user-lists";
+import { UserListsSection } from "@/components/user-lists";
 
 export const metadata = { title: "Twój profil" };
 
@@ -25,12 +27,13 @@ export default async function ProfilePage() {
   const viewer = await getViewer();
   if (!viewer) redirect("/login?next=/profil");
   const client = await createClient();
-  const [activity, wantedResult, followingActivity] = await Promise.all([
+  const [activity, wantedResult, followingActivity, userLists] = await Promise.all([
     getPublicProfileById(viewer.id),
     client.from("want_to_listen")
       .select("created_at,albums(id,title,slug,cover_url)")
       .eq("user_id", viewer.id).order("created_at", { ascending: false }),
     getFollowingActivity(30),
+    getOwnUserLists(viewer.id),
   ]);
   if (!activity || wantedResult.error) throw new Error("Nie udało się pobrać profilu.");
   const wanted = ((wantedResult.data ?? []) as WantedRow[]).flatMap(row => {
@@ -46,6 +49,7 @@ export default async function ProfilePage() {
     </div>
     <FollowingActivity items={followingActivity} />
     <ProfileConnections followers={activity.followers} following={activity.following} />
+    <UserListsSection lists={userLists} own />
     <ProfileActivitySections activity={activity} />
     <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm"><h2 className="text-2xl font-black">Powiadomienia</h2><p className="mt-2 text-zinc-500">Decyzje dotyczące Twoich zgłoszeń są dostępne na osobnej stronie.</p><Link href="/powiadomienia" className="mt-4 inline-flex rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white">Przejdź do powiadomień</Link></section>
     <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
