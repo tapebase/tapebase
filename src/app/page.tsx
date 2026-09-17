@@ -13,7 +13,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
     listAlbums(q, 1, 6),
     q ? listArtists(q, 1, 6) : Promise.resolve(null),
     q ? Promise.resolve([]) : mostRatedRecently(10),
-    q ? Promise.resolve([]) : getLatestComments(6),
+    q ? Promise.resolve([]) : getLatestComments(12),
     q ? Promise.resolve([]) : getMostActiveUsers(10, 30),
   ]);
   return <main>

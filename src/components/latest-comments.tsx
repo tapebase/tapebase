@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Artwork } from "@/components/catalog";
 import { RatingStars } from "@/components/community-controls";
 import { UserAvatar } from "@/components/user-avatar";
+import { ExpandableList } from "@/components/expandable-list";
 import { albumPath, artistPath } from "@/lib/catalog-format";
 import type { LatestComment } from "@/lib/community";
 
@@ -19,7 +20,7 @@ export function LatestComments({ comments }: { comments: LatestComment[] }) {
         <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Społeczność</p>
         <h2 id="latest-comments-heading" className="mt-1 text-2xl font-black">Ostatnie komentarze</h2>
       </div>
-      {comments.length ? <ol className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      {comments.length ? <ExpandableList initialVisible={3} moreLabel="Pokaż więcej komentarzy" className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {comments.map(comment => {
           const targetPath = comment.target.type === "album" ? albumPath(comment.target) : artistPath(comment.target);
           const commentPath = `${targetPath}#comment-${comment.id}`;
@@ -45,7 +46,7 @@ export function LatestComments({ comments }: { comments: LatestComment[] }) {
             <Link href={commentPath} className="mt-4 text-sm font-bold underline underline-offset-4">Przejdź do dyskusji →</Link>
           </li>;
         })}
-      </ol> : <p className="mt-5 rounded-2xl bg-zinc-50 p-5 text-zinc-600">Nie dodano jeszcze żadnego komentarza.</p>}
+      </ExpandableList> : <p className="mt-5 rounded-2xl bg-zinc-50 p-5 text-zinc-600">Nie dodano jeszcze żadnego komentarza.</p>}
     </div>
   </section>;
 }
