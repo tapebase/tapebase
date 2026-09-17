@@ -6,15 +6,18 @@ import { getLatestComments } from "@/lib/community";
 import { getMostActiveUsers } from "@/lib/community-leaderboard";
 import { ActiveUsers } from "@/components/active-users";
 import { RecentlyRatedAlbums } from "@/components/recently-rated-albums";
+import { getLatestPublicPlaylists } from "@/lib/user-lists";
+import { LatestPlaylists } from "@/components/latest-playlists";
 
 export default async function Home({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const q = searchText((await searchParams).q);
-  const [albums, artists, recentlyRated, latestComments, activeUsers] = await Promise.all([
+  const [albums, artists, recentlyRated, latestComments, activeUsers, latestPlaylists] = await Promise.all([
     listAlbums(q, 1, 6),
     q ? listArtists(q, 1, 6) : Promise.resolve(null),
     q ? Promise.resolve([]) : mostRatedRecently(11),
     q ? Promise.resolve([]) : getLatestComments(12),
     q ? Promise.resolve([]) : getMostActiveUsers(10, 30),
+    q ? Promise.resolve([]) : getLatestPublicPlaylists(12),
   ]);
   return <main>
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
@@ -57,5 +60,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
     </section>
     {!q && <ActiveUsers users={activeUsers} />}
     {!q && <LatestComments comments={latestComments} />}
+    {!q && <LatestPlaylists playlists={latestPlaylists} />}
   </main>;
 }

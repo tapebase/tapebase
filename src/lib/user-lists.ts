@@ -22,6 +22,14 @@ export type UserList = {
 };
 
 export type UserListChoice = { id: number; name: string; is_public: boolean; containsItem: boolean };
+export type PublicPlaylistSummary = {
+  id: number; name: string; description: string | null; cover_url: string | null;
+  created_at: string; username: string; track_count: number; sample_cover_urls: string[];
+};
+type PublicPlaylistSummaryRow = {
+  id: number | string; name: string; description: string | null; cover_url: string | null;
+  created_at: string; username: string; track_count: number | string; sample_cover_urls: string[] | null;
+};
 type Related<T> = T | T[] | null;
 type RawAlbumItem = { added_at: string; album: Related<UserListAlbum> };
 type RawTrack = Omit<UserListTrack, "album" | "credits"> & {
@@ -126,4 +134,20 @@ export async function getUserTrackListChoicesForTracks(userId: string, trackIds:
     containsItem: contained.has(`${Number(list.id)}:${trackId}`),
   }))));
   return result;
+}
+
+export async function getLatestPublicPlaylists(limit = 12): Promise<PublicPlaylistSummary[]> {
+  const client = catalogClient();
+  const { data, error } = await client.rpc("latest_public_playlists", { limit_count: limit });
+  if (error) throw new Error("Nie udało się pobrać ostatnich playlist.");
+  return ((data ?? []) as unknown as PublicPlaylistSummaryRow[]).map(row => ({
+    id: Number(row.id),
+    name: String(row.name),
+    description: row.description ? String(row.description) : null,
+    cover_url: row.cover_url ? String(row.cover_url) : null,
+    created_at: String(row.created_at),
+    username: String(row.username),
+    track_count: Number(row.track_count ?? 0),
+    sample_cover_urls: Array.isArray(row.sample_cover_urls) ? row.sample_cover_urls.map(String) : [],
+  }));
 }

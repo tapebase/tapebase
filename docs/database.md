@@ -473,6 +473,9 @@ Pole `user_lists.cover_url` wskazuje własną okładkę listy. Kwadratowe pliki 
 są przechowywane w publicznym buckecie `playlist-covers`, w katalogu właściciela.
 RLS pozwala zmieniać pliki wyłącznie aktywnemu właścicielowi, a limit 190 KB
 pozostawia bezpieczny margines względem limitu okładki Spotify po zakodowaniu Base64.
+Funkcja `latest_public_playlists` zwraca lekkie podsumowanie najnowszych publicznych
+playlist utworów na stronę główną: autora, liczbę utworów oraz maksymalnie cztery
+okładki do grafiki zastępczej. Prywatne listy nie trafiają do wyniku.
 
 ## user_feedback
 
