@@ -9,7 +9,8 @@ import { ProfileSettings } from "@/components/profile-settings";
 import { Artwork } from "@/components/catalog";
 import { albumPath } from "@/lib/catalog-format";
 import { getFollowingActivity } from "@/lib/follows";
-import { FollowingActivity, ProfileConnections } from "@/components/profile-social";
+import { FollowingActivity } from "@/components/following-activity";
+import { ProfileConnections } from "@/components/profile-social";
 
 export const metadata = { title: "Twój profil" };
 
