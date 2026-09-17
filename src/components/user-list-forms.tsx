@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { addAlbumToUserList, addTrackToUserList, createUserList, deleteUserList, updateUserList } from "@/app/actions/user-lists";
+import type { UserListActionState } from "@/app/actions/user-lists";
 import type { UserListChoice } from "@/lib/user-lists";
 
-const initialState = {};
+const initialState: UserListActionState = {};
 
 function Feedback({ state }: { state: { message?: string; success?: boolean } }) {
   return state.message ? <p aria-live="polite" className={`mt-3 text-sm font-semibold ${state.success ? "text-emerald-700" : "text-red-700"}`}>{state.message}</p> : null;
@@ -36,6 +37,9 @@ export function CreateUserListForm() {
     <div className="mt-6"><ListFields /></div>
     <button disabled={pending} className="mt-5 rounded-xl bg-zinc-950 px-5 py-3 font-bold text-white disabled:opacity-60">{pending ? "Tworzenie…" : "Utwórz listę"}</button>
     <Feedback state={state} />
+    {state.success && state.listId && <Link href={state.kind === "tracks" ? `/utwory?lista=${state.listId}` : "/album"} className="mt-4 inline-flex rounded-xl border border-zinc-300 px-5 py-3 font-bold hover:bg-zinc-50">
+      {state.kind === "tracks" ? "Dodaj utwory →" : "Znajdź albumy →"}
+    </Link>}
   </form>;
 }
 
@@ -78,6 +82,18 @@ export function AddTrackToPlaylist({ trackId, lists }: { trackId: number; lists:
       <Feedback state={state} />
     </form>
   </details>;
+}
+
+export function AddTrackToSelectedPlaylist({ trackId, listId, alreadyAdded }: { trackId: number; listId: number; alreadyAdded: boolean }) {
+  const [state, action, pending] = useActionState(addTrackToUserList.bind(null, trackId), initialState);
+  const added = alreadyAdded || state.success;
+  return <form action={action} className="shrink-0 text-right">
+    <input type="hidden" name="listId" value={listId} />
+    <button disabled={pending || added} className="rounded-xl bg-zinc-950 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+      {pending ? "Dodawanie…" : added ? "Dodano" : "Dodaj"}
+    </button>
+    {state.message && !state.success && <p aria-live="polite" className="mt-1 max-w-40 text-xs font-semibold text-red-700">{state.message}</p>}
+  </form>;
 }
 
 export function DeleteUserListForm({ id }: { id: number }) {

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { UserListKind } from "@/lib/user-lists";
 
-export type UserListActionState = { message?: string; success?: boolean };
+export type UserListActionState = { message?: string; success?: boolean; listId?: number; kind?: UserListKind };
 
 async function authorizedClient() {
   const client = await createClient();
@@ -45,11 +45,12 @@ export async function createUserList(_state: UserListActionState, formData: Form
   const values = listValues(formData);
   const kind = listKind(formData);
   if (!values || !kind) return { message: "Wybierz rodzaj listy i sprawdź nazwę oraz opis." };
-  const { error } = await auth.client.from("user_lists").insert({ user_id: auth.userId, kind, ...values });
+  const { data, error } = await auth.client.from("user_lists")
+    .insert({ user_id: auth.userId, kind, ...values }).select("id").single();
   if (error?.code === "23505") return { message: "Masz już listę o takiej nazwie." };
   if (error) return { message: error.message.includes("limit") ? "Osiągnięto limit 50 list." : "Nie udało się utworzyć listy." };
   refreshLists();
-  return { success: true, message: "Lista została utworzona." };
+  return { success: true, message: "Lista została utworzona.", listId: Number(data.id), kind };
 }
 
 export async function updateUserList(listId: number, _state: UserListActionState, formData: FormData): Promise<UserListActionState> {
@@ -115,6 +116,7 @@ export async function addTrackToUserList(trackId: number, _state: UserListAction
   if (error) return { message: error.message.includes("limit") ? "Ta playlista zawiera już maksymalnie 500 utworów." : "Nie udało się dodać utworu." };
   refreshLists(listId);
   revalidatePath("/album/[slug]", "page");
+  revalidatePath("/utwory");
   return { success: true, message: "Utwór został dodany do playlisty." };
 }
 
@@ -127,4 +129,5 @@ export async function removeTrackFromUserList(listId: number, trackId: number) {
   await auth.client.from("user_track_list_items").delete().eq("list_id", listId).eq("track_id", trackId);
   refreshLists(listId);
   revalidatePath("/album/[slug]", "page");
+  revalidatePath("/utwory");
 }

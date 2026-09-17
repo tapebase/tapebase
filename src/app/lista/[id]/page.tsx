@@ -38,6 +38,9 @@ export default async function UserListPage({ params, searchParams }: Props) {
         <span className="rounded-full bg-zinc-100 px-3 py-1.5 text-sm font-bold">{itemCount} {list.kind === "albums" ? (itemCount === 1 ? "album" : "albumów") : (itemCount === 1 ? "utwór" : "utworów")}</span>
       </div>
       {list.description && <p className="mt-5 max-w-3xl whitespace-pre-wrap text-zinc-600">{list.description}</p>}
+      {own && <Link href={list.kind === "tracks" ? `/utwory?lista=${list.id}` : "/album"} className="mt-5 inline-flex rounded-xl bg-zinc-950 px-5 py-3 font-bold text-white">
+        {list.kind === "tracks" ? "Dodaj utwory" : "Dodaj albumy"}
+      </Link>}
     </header>
 
     {list.kind === "albums" ? <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">

@@ -466,6 +466,8 @@ Jeden użytkownik może mieć maksymalnie 50 list, a lista maksymalnie 500 pozyc
 Spotify i nie jest udostępniona klientom przez RLS ani granty. Po eksporcie lista
 zachowuje identyfikator, adres i czas utworzenia jej kopii w Spotify. Pierwsza
 wersja eksportu tworzy jednorazową kopię; nie synchronizuje późniejszych zmian.
+Funkcja `search_playlist_track_ids` zasila osobny ekran dodawania utworów i
+wyszukuje po tytule utworu, albumu oraz nazwie widocznego artysty.
 
 ## user_feedback
 
