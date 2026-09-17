@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Artwork } from "@/components/catalog";
 import { RatingStars } from "@/components/community-controls";
 import { UserAvatar } from "@/components/user-avatar";
+import { ExpandableList } from "@/components/expandable-list";
 import type { PublicProfileActivity } from "@/lib/profiles";
 import { albumPath, artistPath } from "@/lib/catalog-format";
 import type { ReactNode } from "react";
@@ -46,36 +47,36 @@ export function ProfileActivitySections({ activity }: { activity: PublicProfileA
   return <div className="mt-6 grid gap-6 lg:grid-cols-2">
     <section className="rounded-3xl bg-white p-6 shadow-sm">
       <h2 className="text-2xl font-black">Oceny albumów</h2>
-      {activity.albumRatings.length ? <ul className="mt-4 space-y-3">{activity.albumRatings.map(row => <li key={row.album.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-zinc-100 p-3">
+      {activity.albumRatings.length ? <ExpandableList initialVisible={5} moreLabel="Pokaż więcej ocen albumów" className="mt-4 space-y-3">{activity.albumRatings.map(row => <li key={row.album.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-zinc-100 p-3">
         <Link href={albumPath(row.album)}><Artwork src={row.album.cover_url} alt={`Okładka albumu ${row.album.title}`} /></Link>
         <Link href={albumPath(row.album)} className="min-w-0 truncate font-bold hover:underline">{row.album.title}</Link>
         <RatingValue value={row.rating} />
-      </li>)}</ul> : <p className="mt-4 text-zinc-500">Brak ocen albumów.</p>}
+      </li>)}</ExpandableList> : <p className="mt-4 text-zinc-500">Brak ocen albumów.</p>}
     </section>
 
     <section className="rounded-3xl bg-white p-6 shadow-sm">
       <h2 className="text-2xl font-black">Oceny artystów</h2>
-      {activity.artistRatings.length ? <ul className="mt-4 space-y-3">{activity.artistRatings.map(row => <li key={row.artist.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-zinc-100 p-3">
+      {activity.artistRatings.length ? <ExpandableList initialVisible={5} moreLabel="Pokaż więcej ocen artystów" className="mt-4 space-y-3">{activity.artistRatings.map(row => <li key={row.artist.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-zinc-100 p-3">
         <Link href={artistPath(row.artist)}><Artwork src={row.artist.image_url} alt={`Zdjęcie: ${row.artist.name || "artysta"}`} /></Link>
         <Link href={artistPath(row.artist)} className="min-w-0 truncate font-bold hover:underline">{row.artist.name || "Artysta bez nazwy"}</Link>
         <RatingValue value={row.rating} />
-      </li>)}</ul> : <p className="mt-4 text-zinc-500">Brak ocen artystów.</p>}
+      </li>)}</ExpandableList> : <p className="mt-4 text-zinc-500">Brak ocen artystów.</p>}
     </section>
 
     <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
       <h2 className="text-2xl font-black">Komentarze</h2>
-      {activity.comments.length ? <ol className="mt-4 space-y-3">{activity.comments.map(comment => { const href = comment.album ? albumPath(comment.album) : comment.artist ? artistPath(comment.artist) : "#"; const title = comment.album?.title ?? comment.artist?.name ?? "Komentarz"; return <li key={comment.id} className="rounded-xl border border-zinc-100 p-4">
+      {activity.comments.length ? <ExpandableList initialVisible={5} moreLabel="Pokaż więcej komentarzy" className="mt-4 space-y-3">{activity.comments.map(comment => { const href = comment.album ? albumPath(comment.album) : comment.artist ? artistPath(comment.artist) : "#"; const title = comment.album?.title ?? comment.artist?.name ?? "Komentarz"; return <li key={comment.id} className="rounded-xl border border-zinc-100 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3"><Link href={`${href}#comment-${comment.id}`} className="font-bold hover:underline">{title}</Link><time className="text-xs text-zinc-500" dateTime={comment.created_at}>{date.format(new Date(comment.created_at))}</time></div>
         <p className="mt-2 whitespace-pre-wrap break-words text-zinc-700">{comment.content}</p>
-      </li>; })}</ol> : <p className="mt-4 text-zinc-500">Brak komentarzy.</p>}
+      </li>; })}</ExpandableList> : <p className="mt-4 text-zinc-500">Brak komentarzy.</p>}
     </section>
 
     <section className="rounded-3xl bg-white p-6 shadow-sm lg:col-span-2">
       <h2 className="text-2xl font-black">Przesłuchane albumy</h2>
-      {activity.listened.length ? <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{activity.listened.map(row => <li key={row.album.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-3 rounded-xl border border-zinc-100 p-3">
+      {activity.listened.length ? <ExpandableList initialVisible={5} moreLabel="Pokaż więcej przesłuchanych albumów" className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{activity.listened.map(row => <li key={row.album.id} className="grid grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-3 rounded-xl border border-zinc-100 p-3">
         <Link href={albumPath(row.album)}><Artwork src={row.album.cover_url} alt={`Okładka albumu ${row.album.title}`} /></Link>
         <Link href={albumPath(row.album)} className="min-w-0 truncate font-bold hover:underline">{row.album.title}</Link>
-      </li>)}</ul> : <p className="mt-4 text-zinc-500">Brak przesłuchanych albumów.</p>}
+      </li>)}</ExpandableList> : <p className="mt-4 text-zinc-500">Brak przesłuchanych albumów.</p>}
     </section>
   </div>;
 }
