@@ -118,7 +118,7 @@ async function topRatedAlbumsUncached(limit = 10, filters: AlbumRankingFilters =
 }
 export const topRatedAlbums = unstable_cache(topRatedAlbumsUncached, ["catalog-top-albums"], { revalidate: 60, tags: ["catalog", "ratings"] });
 
-async function mostRatedRecentlyUncached(limit = 10): Promise<RecentlyRatedAlbum[]> {
+async function mostRatedRecentlyUncached(limit = 10, offset = 0): Promise<RecentlyRatedAlbum[]> {
   const client = catalogClient();
   const recent = checked(await client.from("recent_album_rating_summary")
     .select("album_id,recent_rating_count,average,rating_count")
@@ -126,7 +126,7 @@ async function mostRatedRecentlyUncached(limit = 10): Promise<RecentlyRatedAlbum
     .order("average", { ascending: false })
     .order("rating_count", { ascending: false })
     .order("album_id")
-    .limit(limit));
+    .range(offset, offset + limit - 1));
   if (!recent.length) return [];
 
   const albums = await client.from("albums").select(albumFields)

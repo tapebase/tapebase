@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { listAlbums, listArtists, mostRatedRecently, searchText, type SearchParams } from "@/lib/catalog";
-import { AlbumCard, ArtistCard, Artwork, Empty, SearchForm } from "@/components/catalog";
+import { AlbumCard, ArtistCard, Empty, SearchForm } from "@/components/catalog";
 import { LatestComments } from "@/components/latest-comments";
-import { albumPath } from "@/lib/catalog-format";
 import { getLatestComments } from "@/lib/community";
 import { getMostActiveUsers } from "@/lib/community-leaderboard";
 import { ActiveUsers } from "@/components/active-users";
+import { RecentlyRatedAlbums } from "@/components/recently-rated-albums";
 
 export default async function Home({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const q = searchText((await searchParams).q);
   const [albums, artists, recentlyRated, latestComments, activeUsers] = await Promise.all([
     listAlbums(q, 1, 6),
     q ? listArtists(q, 1, 6) : Promise.resolve(null),
-    q ? Promise.resolve([]) : mostRatedRecently(10),
+    q ? Promise.resolve([]) : mostRatedRecently(11),
     q ? Promise.resolve([]) : getLatestComments(12),
     q ? Promise.resolve([]) : getMostActiveUsers(10, 30),
   ]);
@@ -33,19 +33,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<Sea
           </div>
           <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Top 10</span>
         </div>
-        {recentlyRated.length ? <ol className="mt-6 grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {recentlyRated.map((album, index) => <li key={album.id} className="relative min-w-0 overflow-hidden rounded-2xl border border-zinc-100 p-3 sm:p-4">
-            <span className="absolute left-2 top-2 z-10 flex h-8 min-w-8 items-center justify-center rounded-full bg-zinc-950 px-2 text-sm font-black text-white shadow">{index + 1}</span>
-            <Link href={albumPath(album)} aria-label={`Album: ${album.title}`} className="block min-w-0 max-w-full">
-              <Artwork src={album.cover_url} alt={`Okładka albumu ${album.title}`} />
-              <h3 className="mt-4 truncate font-black hover:underline">{album.title}</h3>
-            </Link>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-bold text-amber-600">★ {album.average.toFixed(1)}</p>
-              <p className="text-xs text-zinc-500">{album.recentRatingCount} {album.recentRatingCount === 1 ? "ocena" : "ocen"} w 7 dni</p>
-            </div>
-          </li>)}
-        </ol> : <p className="mt-5 rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-600">W ostatnich 7 dniach nie dodano jeszcze żadnej oceny.</p>}
+        {recentlyRated.length ? <RecentlyRatedAlbums
+          initialItems={recentlyRated.slice(0, 10).map(album => ({ id: album.id, title: album.title, slug: album.slug, cover_url: album.cover_url, average: album.average, recentRatingCount: album.recentRatingCount }))}
+          initialHasMore={recentlyRated.length > 10}
+        /> : <p className="mt-5 rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-600">W ostatnich 7 dniach nie dodano jeszcze żadnej oceny.</p>}
       </div>
     </section>}
     <section id="ostatnio-dodane" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
