@@ -22,6 +22,7 @@ export type Album = {
   primary_artist: Artist | null; credits: Credit[];
 };
 export type RatedAlbum = Album & { average: number; ratingCount: number };
+export type RatedAlbumCover = Album & { average: number; ratingCount: number };
 export type RecentlyRatedAlbum = RatedAlbum & { recentRatingCount: number };
 export type RatedArtist = Artist & { average: number; ratingCount: number };
 export type Track = {
@@ -118,6 +119,38 @@ async function topRatedAlbumsUncached(limit = 10, filters: AlbumRankingFilters =
 }
 export const topRatedAlbums = unstable_cache(topRatedAlbumsUncached, ["catalog-top-albums"], { revalidate: 60, tags: ["catalog", "ratings"] });
 
+async function topRatedAlbumCoversUncached(limit = 100, filters: AlbumRankingFilters = {}): Promise<RatedAlbumCover[]> {
+  const client = catalogClient();
+  let summaryQuery = client.from("album_cover_rating_summary")
+    .select("album_id,average,rating_count")
+    .order("average", { ascending: false })
+    .order("rating_count", { ascending: false })
+    .order("album_id");
+  if (filters.minVotes && filters.minVotes > 1) summaryQuery = summaryQuery.gte("rating_count", filters.minVotes);
+  const ranked = checked(await summaryQuery.limit(1000));
+  if (!ranked.length) return [];
+
+  const albums = await client.from("albums").select(albumFields)
+    .in("id", ranked.map(item => item.album_id))
+    .not("cover_url", "is", null)
+    .returns<Album[]>();
+  const byId = new Map(checked(albums).map(album => [album.id, album]));
+  return ranked.flatMap(item => {
+    const album = byId.get(item.album_id);
+    const yearMatches = !filters.year || album?.release_date_raw?.slice(0, 4) === filters.year;
+    const typeMatches = !filters.releaseType || album?.album_type === filters.releaseType;
+    const genreMatches = !filters.genre || album?.genre === filters.genre;
+    const countryMatches = !filters.country || filters.country === "all"
+      || (filters.country === "PL" ? album?.primary_artist?.country_code === "PL" : Boolean(album?.primary_artist?.country_code && album.primary_artist.country_code !== "PL"));
+    return album && yearMatches && typeMatches && genreMatches && countryMatches ? [{
+      ...album,
+      average: Number(item.average),
+      ratingCount: Number(item.rating_count),
+    }] : [];
+  }).slice(0, limit);
+}
+export const topRatedAlbumCovers = unstable_cache(topRatedAlbumCoversUncached, ["catalog-top-album-covers"], { revalidate: 60, tags: ["catalog", "ratings"] });
+
 async function mostRatedRecentlyUncached(limit = 10, offset = 0): Promise<RecentlyRatedAlbum[]> {
   const client = catalogClient();
   const recent = checked(await client.from("recent_album_rating_summary")
@@ -174,12 +207,13 @@ export const topRatedArtists = unstable_cache(topRatedArtistsUncached, ["catalog
 
 async function rankingMetadataUncached() {
   const client = catalogClient();
-  const [albumVotes, artistVotes, dates] = await Promise.all([
+  const [albumVotes, artistVotes, coverVotes, dates] = await Promise.all([
     client.from("ratings").select("id", { count: "exact", head: true }),
     client.from("artist_ratings").select("id", { count: "exact", head: true }),
+    client.from("album_cover_ratings").select("id", { count: "exact", head: true }),
     client.from("albums").select("release_date_raw").not("release_date_raw", "is", null).limit(1000),
   ]);
-  if (albumVotes.error || artistVotes.error || dates.error) throw new Error("Nie udało się pobrać danych rankingów.");
+  if (albumVotes.error || artistVotes.error || coverVotes.error || dates.error) throw new Error("Nie udało się pobrać danych rankingów.");
   const catalogYears = [...new Set((dates.data ?? []).flatMap(item => {
     const year = item.release_date_raw?.slice(0, 4);
     return year && /^\d{4}$/.test(year) ? [year] : [];
@@ -189,7 +223,7 @@ async function rankingMetadataUncached() {
     ...Array.from({ length: currentYear - 1970 + 1 }, (_, index) => String(currentYear - index)),
     ...catalogYears,
   ])].sort((a, b) => b.localeCompare(a));
-  return { albumVotes: albumVotes.count ?? 0, artistVotes: artistVotes.count ?? 0, years };
+  return { albumVotes: albumVotes.count ?? 0, artistVotes: artistVotes.count ?? 0, coverVotes: coverVotes.count ?? 0, years };
 }
 export const rankingMetadata = unstable_cache(rankingMetadataUncached, ["ranking-metadata"], { revalidate: 60, tags: ["catalog", "ratings"] });
 export async function getAlbum(slug: string) {

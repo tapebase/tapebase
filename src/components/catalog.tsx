@@ -46,6 +46,7 @@ export async function Header() {
             <div className="rounded-xl border border-zinc-200 bg-white p-2 shadow-lg">
               <Link href="/rankingi?typ=artysci" className="block rounded-lg px-4 py-3 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:bg-zinc-100 focus-visible:text-zinc-950">TOP artystów</Link>
               <Link href="/rankingi?typ=albumy" className="block rounded-lg px-4 py-3 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:bg-zinc-100 focus-visible:text-zinc-950">TOP albumów</Link>
+              <Link href="/rankingi?typ=okladki" className="block rounded-lg px-4 py-3 hover:bg-zinc-100 hover:text-zinc-950 focus-visible:bg-zinc-100 focus-visible:text-zinc-950">TOP okładek</Link>
             </div>
           </div>
         </div>

@@ -6,7 +6,7 @@ import { duration, orderedArtists, releaseDate } from "@/lib/catalog-format";
 import { getViewer } from "@/lib/auth";
 import { getAlbumCommunity, getViewerAlbumState } from "@/lib/community";
 import { AlbumCommunitySection } from "@/components/album-community";
-import { AlbumRatingPanel } from "@/components/community-controls";
+import { AlbumRatingPanel, CoverRatingPanel } from "@/components/community-controls";
 import { genreLabel } from "@/lib/genres";
 import { getUserAlbumListChoices, getUserTrackListChoicesForTracks } from "@/lib/user-lists";
 import { AddAlbumToList, AddTrackToPlaylist } from "@/components/user-list-forms";
@@ -36,6 +36,14 @@ export default async function AlbumPage({ params }: Props) {
     <section className="grid gap-8 lg:grid-cols-[320px_1fr]">
       <aside className="min-w-0">
         <Artwork src={album.cover_url} alt={`Okładka albumu ${album.title}`} priority className="mx-auto w-full max-w-80" />
+        <CoverRatingPanel
+          albumId={album.id}
+          average={community.coverAverage}
+          ratingCount={community.coverRatingCount}
+          initialRating={viewerState.coverRating}
+          canRate={Boolean(viewer)}
+          returnPath={`/album/${slug}`}
+        />
         <AlbumRatingPanel
           albumId={album.id}
           average={community.average}

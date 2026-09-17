@@ -235,6 +235,15 @@ Jeden użytkownik może mieć jedną aktywną ocenę albumu.
 
 ---
 
+## album_cover_ratings
+
+Niezależne oceny oprawy graficznej albumów. Zakres 1.0–10.0, krok 0.5.
+Unikalność `(user_id, album_id)` zapewnia jedną aktywną ocenę okładki na użytkownika.
+Publiczny widok `album_cover_rating_summary` udostępnia średnią i liczbę głosów dla
+strony albumu oraz rankingu TOP okładek.
+
+---
+
 ## artist_ratings
 
 Oceny artystów wystawiane niezależnie od ocen albumów.

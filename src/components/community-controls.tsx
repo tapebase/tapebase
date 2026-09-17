@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
   addComment,
+  saveCoverRating,
   saveArtistRating,
   saveRating,
   toggleListened,
@@ -46,7 +47,7 @@ function RatingPanel({
   disabledMessage,
 }: {
   targetId: number;
-  entity: "album" | "artist" | "playlist";
+  entity: "album" | "artist" | "playlist" | "cover";
   average: number | null;
   ratingCount: number;
   initialRating: number | null;
@@ -54,14 +55,14 @@ function RatingPanel({
   returnPath: string;
   disabledMessage?: string;
 }) {
-  const saveAction = entity === "album" ? saveRating : entity === "artist" ? saveArtistRating : saveUserListRating;
+  const saveAction = entity === "album" ? saveRating : entity === "artist" ? saveArtistRating : entity === "cover" ? saveCoverRating : saveUserListRating;
   const [state, action, pending] = useActionState(saveAction.bind(null, targetId), initialState);
   const [selected, setSelected] = useState(initialRating);
   const [hovered, setHovered] = useState<number | null>(null);
   const shown = hovered ?? selected ?? 0;
 
-  const entityName = entity === "album" ? "album" : entity === "artist" ? "artystę" : "playlistę";
-  const headingName = entity === "album" ? "albumu" : entity === "artist" ? "artysty" : "playlisty";
+  const entityName = entity === "album" ? "album" : entity === "artist" ? "artystę" : entity === "cover" ? "okładkę" : "playlistę";
+  const headingName = entity === "album" ? "albumu" : entity === "artist" ? "artysty" : entity === "cover" ? "okładki" : "playlisty";
   return <section className="mt-4 rounded-2xl bg-white p-5 shadow-sm" aria-labelledby={`${entity}-rating-heading`}>
     <div className="flex items-end justify-between gap-3">
       <div>
@@ -120,6 +121,10 @@ type RatingPanelProps = {
 
 export function AlbumRatingPanel({ albumId, ...props }: RatingPanelProps & { albumId: number }) {
   return <RatingPanel targetId={albumId} entity="album" {...props} />;
+}
+
+export function CoverRatingPanel({ albumId, ...props }: RatingPanelProps & { albumId: number }) {
+  return <RatingPanel targetId={albumId} entity="cover" {...props} />;
 }
 
 export function ArtistRatingPanel({ artistId, ...props }: RatingPanelProps & { artistId: number }) {

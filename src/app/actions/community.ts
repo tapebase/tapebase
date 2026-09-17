@@ -55,6 +55,28 @@ export async function saveRating(
   return { success: true, message: "Ocena zapisana." };
 }
 
+export async function saveCoverRating(
+  albumId: number,
+  _state: CommunityActionState,
+  formData: FormData,
+): Promise<CommunityActionState> {
+  const auth = await authorizedClient();
+  if (!auth) return { message: "Zaloguj się, aby ocenić okładkę." };
+  const rating = Number(formData.get("rating"));
+  if (!validAlbumId(albumId) || !Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
+    return { message: "Wybierz ocenę od 1 do 10 co 0,5." };
+  }
+
+  const { error } = await auth.client.from("album_cover_ratings").upsert(
+    { user_id: auth.userId, album_id: albumId, rating },
+    { onConflict: "user_id,album_id" },
+  );
+  if (error) return { message: "Nie udało się zapisać oceny okładki." };
+  revalidatePath("/album/[slug]", "page");
+  revalidatePath("/rankingi");
+  return { success: true, message: "Ocena okładki zapisana." };
+}
+
 export async function saveArtistRating(
   artistId: number,
   _state: CommunityActionState,

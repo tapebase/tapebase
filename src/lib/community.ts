@@ -22,11 +22,14 @@ export type AlbumComment = CommunityComment;
 export type AlbumCommunity = {
   average: number | null;
   ratingCount: number;
+  coverAverage: number | null;
+  coverRatingCount: number;
   comments: AlbumComment[];
 };
 
 export type ViewerAlbumState = {
   rating: number | null;
+  coverRating: number | null;
   listened: boolean;
   wantToListen: boolean;
 };
@@ -115,12 +118,14 @@ export async function getLatestComments(limit = 6): Promise<LatestComment[]> {
 
 export async function getAlbumCommunity(albumId: number, viewer: Viewer | null): Promise<AlbumCommunity> {
   const client = catalogClient();
-  const [ratingsResult, commentsResult] = await Promise.all([
+  const [ratingsResult, coverRatingsResult, commentsResult] = await Promise.all([
     client.from("ratings").select("rating").eq("album_id", albumId),
+    client.from("album_cover_rating_summary").select("average,rating_count").eq("album_id", albumId).maybeSingle(),
     getCommentRows("album", albumId),
   ]);
 
   if (ratingsResult.error) throw new Error("Nie udało się pobrać ocen.");
+  if (coverRatingsResult.error) throw new Error("Nie udało się pobrać ocen okładki.");
   if (commentsResult.error) throw new Error("Nie udało się pobrać komentarzy.");
   const ratings = (ratingsResult.data ?? []).map(item => Number(item.rating));
   const commentRows = commentsResult.data;
@@ -129,6 +134,8 @@ export async function getAlbumCommunity(albumId: number, viewer: Viewer | null):
   return {
     average: ratings.length ? ratings.reduce((sum, value) => sum + value, 0) / ratings.length : null,
     ratingCount: ratings.length,
+    coverAverage: coverRatingsResult.data ? Number(coverRatingsResult.data.average) : null,
+    coverRatingCount: coverRatingsResult.data ? Number(coverRatingsResult.data.rating_count) : 0,
     comments,
   };
 }
@@ -185,16 +192,18 @@ async function buildCommentThreads(commentRows: CommentResult[], viewer: Viewer 
 }
 
 export async function getViewerAlbumState(albumId: number, viewer: Viewer | null): Promise<ViewerAlbumState> {
-  if (!viewer) return { rating: null, listened: false, wantToListen: false };
+  if (!viewer) return { rating: null, coverRating: null, listened: false, wantToListen: false };
   const client = await createClient();
-  const [rating, listened, wanted] = await Promise.all([
+  const [rating, coverRating, listened, wanted] = await Promise.all([
     client.from("ratings").select("rating").eq("album_id", albumId).eq("user_id", viewer.id).maybeSingle(),
+    client.from("album_cover_ratings").select("rating").eq("album_id", albumId).eq("user_id", viewer.id).maybeSingle(),
     client.from("listened").select("id").eq("album_id", albumId).eq("user_id", viewer.id).maybeSingle(),
     client.from("want_to_listen").select("id").eq("album_id", albumId).eq("user_id", viewer.id).maybeSingle(),
   ]);
-  if (rating.error || listened.error || wanted.error) throw new Error("Nie udało się pobrać Twojej aktywności.");
+  if (rating.error || coverRating.error || listened.error || wanted.error) throw new Error("Nie udało się pobrać Twojej aktywności.");
   return {
     rating: rating.data ? Number(rating.data.rating) : null,
+    coverRating: coverRating.data ? Number(coverRating.data.rating) : null,
     listened: Boolean(listened.data),
     wantToListen: Boolean(wanted.data),
   };
