@@ -469,6 +469,11 @@ wersja eksportu tworzy jednorazową kopię; nie synchronizuje późniejszych zmi
 Funkcja `search_playlist_track_ids` zasila osobny ekran dodawania utworów i
 wyszukuje po tytule utworu, albumu oraz nazwie widocznego artysty.
 
+Pole `user_lists.cover_url` wskazuje własną okładkę listy. Kwadratowe pliki JPEG
+są przechowywane w publicznym buckecie `playlist-covers`, w katalogu właściciela.
+RLS pozwala zmieniać pliki wyłącznie aktywnemu właścicielowi, a limit 190 KB
+pozostawia bezpieczny margines względem limitu okładki Spotify po zakodowaniu Base64.
+
 ## user_feedback
 
 Prywatne zgłoszenia błędów, pomysłów i innych uwag od zalogowanych testerów. Autor

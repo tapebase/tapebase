@@ -4,6 +4,7 @@ import { ExpandableList } from "@/components/expandable-list";
 import type { UserList } from "@/lib/user-lists";
 
 function ListCover({ list }: { list: UserList }) {
+  if (list.cover_url) return <Artwork src={list.cover_url} alt={`Okładka listy ${list.name}`} className="rounded-xl" />;
   const albums = (list.kind === "albums"
     ? list.albumItems.map(item => item.album)
     : list.trackItems.flatMap(item => item.track.album ? [item.track.album] : [])

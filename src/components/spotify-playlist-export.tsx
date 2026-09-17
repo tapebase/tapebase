@@ -1,12 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { exportUserListToSpotify } from "@/app/actions/spotify-playlists";
+import { exportUserListToSpotify, updateUserListSpotifyCover } from "@/app/actions/spotify-playlists";
 
-export function SpotifyPlaylistExport({ listId, connected, playlistUrl, callbackStatus }: {
-  listId: number; connected: boolean; playlistUrl: string | null; callbackStatus?: string;
+export function SpotifyPlaylistExport({ listId, connected, canUploadCover, coverUrl, playlistUrl, callbackStatus }: {
+  listId: number; connected: boolean; canUploadCover: boolean; coverUrl: string | null; playlistUrl: string | null; callbackStatus?: string;
 }) {
   const [state, action, pending] = useActionState(exportUserListToSpotify.bind(null, listId), {});
+  const [coverState, coverAction, coverPending] = useActionState(updateUserListSpotifyCover.bind(null, listId), {});
   const url = state.url ?? playlistUrl;
   return <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
     <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Spotify beta</p>
@@ -14,16 +15,24 @@ export function SpotifyPlaylistExport({ listId, connected, playlistUrl, callback
     {callbackStatus === "connected" && <p className="mt-3 font-semibold text-emerald-700">Konto Spotify zostało połączone.</p>}
     {callbackStatus === "denied" && <p className="mt-3 font-semibold text-amber-800">Nie udzielono dostępu do Spotify.</p>}
     {callbackStatus === "error" && <p className="mt-3 font-semibold text-red-700">Nie udało się połączyć konta Spotify. Sprawdź konfigurację i spróbuj ponownie.</p>}
+    {coverUrl && connected && !canUploadCover && <div className="mt-4 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">
+      <p>Połącz Spotify ponownie, aby zezwolić TAPEBASE na ustawianie okładek playlist.</p>
+      <a href={`/api/spotify/connect?listId=${listId}`} className="mt-3 inline-flex rounded-xl bg-[#1DB954] px-4 py-2.5 font-bold text-black">Połącz ponownie</a>
+    </div>}
     {url ? <div className="mt-4">
       <p className="text-sm text-zinc-600">Kopia tej playlisty znajduje się już na Twoim koncie Spotify.</p>
-      <a href={url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex rounded-xl bg-[#1DB954] px-5 py-3 font-bold text-black">Otwórz w Spotify</a>
+      <div className="mt-3 flex flex-wrap gap-3">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-xl bg-[#1DB954] px-5 py-3 font-bold text-black">Otwórz w Spotify</a>
+        {coverUrl && canUploadCover && <form action={coverAction}><button disabled={coverPending} className="rounded-xl border border-zinc-300 px-5 py-3 font-bold disabled:opacity-60">{coverPending ? "Aktualizowanie…" : "Zaktualizuj okładkę w Spotify"}</button></form>}
+      </div>
     </div> : connected ? <form action={action} className="mt-4">
       <p className="text-sm text-zinc-600">TAPEBASE utworzy nową playlistę i doda utwory w widocznej kolejności.</p>
-      <button disabled={pending} className="mt-3 rounded-xl bg-[#1DB954] px-5 py-3 font-bold text-black disabled:opacity-60">{pending ? "Eksportowanie…" : "Utwórz w Spotify"}</button>
+      <button disabled={pending || Boolean(coverUrl && !canUploadCover)} className="mt-3 rounded-xl bg-[#1DB954] px-5 py-3 font-bold text-black disabled:opacity-60">{pending ? "Eksportowanie…" : "Utwórz w Spotify"}</button>
     </form> : <div className="mt-4">
       <p className="text-sm text-zinc-600">Połącz konto, aby TAPEBASE mogło utworzyć na nim playlistę. Dostęp można później odłączyć.</p>
       <a href={`/api/spotify/connect?listId=${listId}`} className="mt-3 inline-flex rounded-xl bg-[#1DB954] px-5 py-3 font-bold text-black">Połącz ze Spotify</a>
     </div>}
     {state.message && <p aria-live="polite" className={`mt-3 text-sm font-semibold ${state.success ? "text-emerald-700" : "text-red-700"}`}>{state.message}</p>}
+    {coverState.message && <p aria-live="polite" className={`mt-3 text-sm font-semibold ${coverState.success ? "text-emerald-700" : "text-red-700"}`}>{coverState.message}</p>}
   </section>;
 }

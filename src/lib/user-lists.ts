@@ -14,6 +14,7 @@ export type UserListTrackItem = { added_at: string; position: number; track: Use
 
 export type UserList = {
   id: number; user_id: string; name: string; description: string | null; is_public: boolean;
+  cover_url: string | null;
   kind: UserListKind; spotify_playlist_id: string | null; spotify_playlist_url: string | null;
   spotify_exported_at: string | null; created_at: string; updated_at: string;
   owner: { username: string; avatar_url: string | null } | null;
@@ -33,7 +34,7 @@ type RawList = Omit<UserList, "owner" | "albumItems" | "trackItems"> & {
   albumItems: RawAlbumItem[] | null; trackItems: RawTrackItem[] | null;
 };
 
-const listFields = "id,user_id,name,description,is_public,kind,spotify_playlist_id,spotify_playlist_url,spotify_exported_at,created_at,updated_at,owner:users!user_lists_user_id_fkey(username,avatar_url),albumItems:user_list_items(added_at,album:albums(id,title,slug,cover_url)),trackItems:user_track_list_items(added_at,position,track:tracks(id,title,spotify_id,album:albums(id,title,slug,cover_url),credits:spotify_track_artists(position,artist:artists(id,name,slug))))";
+const listFields = "id,user_id,name,description,is_public,cover_url,kind,spotify_playlist_id,spotify_playlist_url,spotify_exported_at,created_at,updated_at,owner:users!user_lists_user_id_fkey(username,avatar_url),albumItems:user_list_items(added_at,album:albums(id,title,slug,cover_url)),trackItems:user_track_list_items(added_at,position,track:tracks(id,title,spotify_id,album:albums(id,title,slug,cover_url),credits:spotify_track_artists(position,artist:artists(id,name,slug))))";
 
 function one<T>(value: Related<T>) { return Array.isArray(value) ? value[0] ?? null : value; }
 

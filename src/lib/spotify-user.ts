@@ -6,7 +6,7 @@ import { siteUrl } from "@/lib/site-url";
 
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const API_URL = "https://api.spotify.com/v1";
-export const SPOTIFY_USER_SCOPES = ["playlist-modify-public", "playlist-modify-private", "user-read-private"];
+export const SPOTIFY_USER_SCOPES = ["playlist-modify-public", "playlist-modify-private", "ugc-image-upload", "user-read-private"];
 
 function credentials() {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
@@ -112,9 +112,13 @@ export async function saveSpotifyConnection(userId: string, token: Awaited<Retur
 
 export async function spotifyConnectionStatus(userId: string) {
   const { data, error } = await createAdminClient().from("user_spotify_connections")
-    .select("spotify_user_id,connected_at").eq("user_id", userId).maybeSingle();
+    .select("spotify_user_id,connected_at,scopes").eq("user_id", userId).maybeSingle();
   if (error) throw new Error("Nie udało się sprawdzić połączenia Spotify.");
-  return data ? { connected: true as const, connectedAt: String(data.connected_at) } : { connected: false as const };
+  return data ? {
+    connected: true as const,
+    connectedAt: String(data.connected_at),
+    canUploadCover: Array.isArray(data.scopes) && data.scopes.includes("ugc-image-upload"),
+  } : { connected: false as const, canUploadCover: false };
 }
 
 async function accessTokenForUser(userId: string) {
@@ -137,7 +141,7 @@ async function accessTokenForUser(userId: string) {
 
 export async function exportTrackListToSpotify(userId: string, list: {
   name: string; description: string | null; is_public: boolean;
-  tracks: { spotify_id: string | null }[];
+  tracks: { spotify_id: string | null }[]; coverBase64?: string | null;
 }) {
   const uris = list.tracks.flatMap(track => track.spotify_id ? [`spotify:track:${track.spotify_id}`] : []);
   if (!uris.length) throw new Error("Playlista nie ma utworów dostępnych w Spotify.");
@@ -156,10 +160,35 @@ export async function exportTrackListToSpotify(userId: string, list: {
       method: "POST", body: JSON.stringify({ uris: uris.slice(offset, offset + 100) }),
     });
   }
+  let coverUploaded = false;
+  let coverError: string | null = null;
+  if (list.coverBase64) {
+    try {
+      await spotifyFetch(`/playlists/${encodeURIComponent(created.id)}/images`, accessToken, {
+        method: "PUT",
+        headers: { "Content-Type": "image/jpeg" },
+        body: list.coverBase64,
+      });
+      coverUploaded = true;
+    } catch (error) {
+      coverError = error instanceof Error ? error.message : "Nie udało się przesłać okładki do Spotify.";
+    }
+  }
   return {
     id: created.id,
     url: created.external_urls?.spotify ?? `https://open.spotify.com/playlist/${created.id}`,
+    coverUploaded,
+    coverError,
   };
+}
+
+export async function uploadSpotifyPlaylistCover(userId: string, playlistId: string, coverBase64: string) {
+  const accessToken = await accessTokenForUser(userId);
+  await spotifyFetch(`/playlists/${encodeURIComponent(playlistId)}/images`, accessToken, {
+    method: "PUT",
+    headers: { "Content-Type": "image/jpeg" },
+    body: coverBase64,
+  });
 }
 
 export async function disconnectSpotify(userId: string) {

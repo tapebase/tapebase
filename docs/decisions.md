@@ -296,3 +296,12 @@ mieszaną zawartością. Eksport do Spotify korzysta z Authorization Code Flow,
 przechowuje wyłącznie zaszyfrowany token odświeżania po stronie serwera i w pierwszej
 wersji tworzy jednorazową kopię playlisty. Pełna synchronizacja pozostaje osobnym
 etapem.
+
+# 2026-09-17 — Własne okładki playlist
+
+Użytkownik może ustawić własną grafikę listy z komputera lub telefonu. Przeglądarka
+przycina środek do kwadratu 640 × 640, konwertuje plik do JPEG i kompresuje go przed
+wysłaniem. TAPEBASE zapisuje przygotowaną wersję w Supabase Storage. Przy pierwszym
+eksporcie playlisty ta sama grafika trafia do Spotify przez oficjalny endpoint okładek
+i zakres `ugc-image-upload`. Późniejsza zmiana wymaga jawnego przycisku aktualizacji,
+ponieważ eksport nadal jest jednorazową kopią, a nie synchronizacją dwukierunkową.

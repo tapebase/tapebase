@@ -46,7 +46,7 @@ export function CreateUserListForm() {
 export function EditUserListForm({ id, name, description, isPublic, kind }: { id: number; name: string; description: string | null; isPublic: boolean; kind: "albums" | "tracks" }) {
   const [state, action, pending] = useActionState(updateUserList.bind(null, id), initialState);
   return <form action={action} className="rounded-3xl border border-zinc-200 p-5">
-    <h2 className="text-xl font-black">Ustawienia listy</h2>
+    <h2 className="text-xl font-black">Edytuj {kind === "tracks" ? "playlistę" : "listę"}</h2>
     <p className="mt-1 text-sm text-zinc-500">Rodzaj: {kind === "albums" ? "lista albumów" : "playlista utworów"}</p>
     <div className="mt-4"><ListFields name={name} description={description ?? ""} isPublic={isPublic} /></div>
     <button disabled={pending} className="mt-5 rounded-xl bg-zinc-950 px-5 py-3 font-bold text-white disabled:opacity-60">{pending ? "Zapisywanie…" : "Zapisz zmiany"}</button>

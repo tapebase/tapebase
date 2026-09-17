@@ -7,6 +7,8 @@ import type { UserListKind } from "@/lib/user-lists";
 
 export type UserListActionState = { message?: string; success?: boolean; listId?: number; kind?: UserListKind };
 
+const maxPlaylistCoverSize = 190 * 1024;
+
 async function authorizedClient() {
   const client = await createClient();
   const { data, error } = await client.auth.getClaims();
@@ -66,10 +68,57 @@ export async function updateUserList(listId: number, _state: UserListActionState
   return { success: true, message: "Lista została zaktualizowana." };
 }
 
+export async function updateUserListCover(listId: number, formData: FormData): Promise<UserListActionState> {
+  const auth = await authorizedClient();
+  if (!auth) return { message: "Zaloguj się na aktywne konto, aby zmienić okładkę." };
+  if (!validId(listId)) return { message: "Nieprawidłowa lista." };
+  const { data: list } = await auth.client.from("user_lists").select("id")
+    .eq("id", listId).eq("user_id", auth.userId).maybeSingle();
+  if (!list) return { message: "Nie znaleziono tej listy." };
+
+  const value = formData.get("cover");
+  const cover = value instanceof File && value.size > 0 ? value : null;
+  if (!cover || cover.type !== "image/jpeg" || cover.size > maxPlaylistCoverSize) {
+    return { message: "Wybierz poprawną grafikę. TAPEBASE przygotuje ją jako kwadratowy plik JPEG." };
+  }
+  const bytes = new Uint8Array(await cover.arrayBuffer());
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes.at(-2) !== 0xff || bytes.at(-1) !== 0xd9) {
+    return { message: "Plik nie jest prawidłową grafiką JPEG." };
+  }
+
+  const path = `${auth.userId}/${listId}.jpg`;
+  const { error: uploadError } = await auth.client.storage.from("playlist-covers")
+    .upload(path, bytes, { contentType: "image/jpeg", cacheControl: "3600", upsert: true });
+  if (uploadError) return { message: "Nie udało się przesłać okładki." };
+  const { data: publicFile } = auth.client.storage.from("playlist-covers").getPublicUrl(path);
+  const coverUrl = `${publicFile.publicUrl}?v=${Date.now()}`;
+  const { error } = await auth.client.from("user_lists").update({ cover_url: coverUrl })
+    .eq("id", listId).eq("user_id", auth.userId);
+  if (error) return { message: "Okładka została przesłana, ale nie udało się przypisać jej do listy." };
+  refreshLists(listId);
+  return { success: true, message: "Okładka została zapisana." };
+}
+
+export async function removeUserListCover(listId: number): Promise<UserListActionState> {
+  const auth = await authorizedClient();
+  if (!auth) return { message: "Zaloguj się na aktywne konto, aby usunąć okładkę." };
+  if (!validId(listId)) return { message: "Nieprawidłowa lista." };
+  const { data: list } = await auth.client.from("user_lists").select("id")
+    .eq("id", listId).eq("user_id", auth.userId).maybeSingle();
+  if (!list) return { message: "Nie znaleziono tej listy." };
+  const { error } = await auth.client.from("user_lists").update({ cover_url: null })
+    .eq("id", listId).eq("user_id", auth.userId);
+  if (error) return { message: "Nie udało się usunąć okładki." };
+  await auth.client.storage.from("playlist-covers").remove([`${auth.userId}/${listId}.jpg`]);
+  refreshLists(listId);
+  return { success: true, message: "Okładka została usunięta." };
+}
+
 export async function deleteUserList(listId: number) {
   const auth = await authorizedClient();
   if (!auth || !validId(listId)) return;
-  await auth.client.from("user_lists").delete().eq("id", listId).eq("user_id", auth.userId);
+  const { data } = await auth.client.from("user_lists").delete().eq("id", listId).eq("user_id", auth.userId).select("id").maybeSingle();
+  if (data) await auth.client.storage.from("playlist-covers").remove([`${auth.userId}/${listId}.jpg`]);
   refreshLists();
   redirect("/listy");
 }
