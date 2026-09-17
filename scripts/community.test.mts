@@ -32,6 +32,7 @@ const removeArtistBiographiesMigration = await readFile(new URL("../supabase/mig
 const artistCommentsMigration = await readFile(new URL("../supabase/migrations/202609130030_artist_comments.sql", import.meta.url), "utf8");
 const userFollowsMigration = await readFile(new URL("../supabase/migrations/202609160033_user_follows.sql", import.meta.url), "utf8");
 const followerNotificationsMigration = await readFile(new URL("../supabase/migrations/202609160034_follower_notifications.sql", import.meta.url), "utf8");
+const followEmailEventMigration = await readFile(new URL("../supabase/migrations/202609170035_follow_email_event.sql", import.meta.url), "utf8");
 const draftSchema = `
   create role anon;
   create role authenticated;
@@ -172,12 +173,14 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(artistCommentsMigration);
     await db.exec(userFollowsMigration);
     await db.exec(followerNotificationsMigration);
+    await db.exec(followEmailEventMigration);
     assert.deepEqual((await db.query("select distinct country_code from public.artists")).rows, [{ country_code: "PL" }]);
     assert.deepEqual((await db.query("select distinct genre from public.albums")).rows, [{ genre: "rap" }]);
 
     await db.query("select set_config('request.jwt.claim.sub',$1,false)", [alice]);
     await db.exec("set role authenticated");
-    await db.query("select public.follow_user($1)", [bob]);
+    assert.equal((await db.query<{ created: boolean }>("select public.follow_user($1) as created", [bob])).rows[0].created, true);
+    assert.equal((await db.query<{ created: boolean }>("select public.follow_user($1) as created", [bob])).rows[0].created, false);
     assert.equal((await db.query<{ count: number }>("select count(*)::integer as count from public.user_follows where follower_id=$1 and followed_id=$2", [alice, bob])).rows[0].count, 1);
     const relationship = (await db.query<{ state: { following: boolean } }>("select public.user_relationship_state($1) as state", [bob])).rows[0].state;
     assert.equal(relationship.following, true);

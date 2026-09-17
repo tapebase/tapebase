@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getViewer } from "@/lib/auth";
+import { sendNewFollowerEmail } from "@/lib/email";
 import { createClient } from "@/lib/supabase/server";
 
 type RelationshipOperation = "follow_user" | "unfollow_user" | "block_user" | "unblock_user";
@@ -13,8 +14,16 @@ async function updateRelationship(operation: RelationshipOperation, targetUserId
   if (!/^[0-9a-f-]{36}$/i.test(targetUserId)) throw new Error("Nieprawidłowy użytkownik.");
 
   const client = await createClient();
-  const { error } = await client.rpc(operation, { target_user_id: targetUserId });
+  const { data, error } = await client.rpc(operation, { target_user_id: targetUserId });
   if (error) throw new Error("Nie udało się zmienić relacji z użytkownikiem.");
+
+  if (operation === "follow_user" && data === true) {
+    try {
+      await sendNewFollowerEmail({ recipientUserId: targetUserId, actorUsername: viewer.username });
+    } catch (emailError) {
+      console.error("Nie udało się wysłać e-maila o nowym obserwującym.", emailError);
+    }
+  }
 
   revalidatePath(`/u/${username}`);
   revalidatePath("/profil");

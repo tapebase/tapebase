@@ -274,3 +274,6 @@
   czasu odblokowania. Wszystkie mutacje przechodzą przez kontrolowane funkcje RPC.
 - Nowe obserwowanie pojawia się w dzwonku i prowadzi bezpośrednio do profilu osoby,
   która zaczęła obserwować.
+- Po utworzeniu nowej relacji obserwowana osoba otrzymuje również transakcyjny e-mail
+  z linkiem do profilu. Wysyłka odbywa się po stronie serwera przez Resend, a jej błąd
+  nie cofa poprawnie zapisanej relacji ani powiadomienia w aplikacji.

@@ -422,6 +422,9 @@ danych i nie tworzy kopii aktywności.
 
 Nowe obserwowanie tworzy powiadomienie `new_follower` z identyfikatorem obserwującej
 osoby. Ponowne obserwowanie odświeża istniejący wpis zamiast tworzyć duplikat.
+Funkcja `follow_user` zwraca `true` wyłącznie po faktycznym utworzeniu relacji. Serwer
+wykorzystuje ten wynik do pojedynczej wysyłki e-maila i nie wysyła wiadomości przy
+powtórzeniu żądania dla istniejącej relacji.
 
 ---
 
