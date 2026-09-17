@@ -450,14 +450,22 @@ jego zgłoszenia, a także o odpowiedzi i polubieniu komentarza. RLS pozwala odc
 i oznaczać jako przeczytane wyłącznie własne wpisy. Widok `/powiadomienia` prowadzi
 bezpośrednio do zaimportowanej pozycji, zgłoszenia albo właściwego komentarza.
 
-## user_lists i user_list_items
+## user_lists, user_list_items i user_track_list_items
 
-Własne kolekcje albumów użytkowników. Lista ma nazwę, opcjonalny opis oraz ustawienie
-publiczna/prywatna. Publiczne listy i ich albumy są dostępne na profilu autora;
-prywatne odczytuje wyłącznie właściciel. `user_list_items` nie pozwala dodać tego
-samego albumu do jednej listy więcej niż raz. RLS ogranicza tworzenie, edycję i
-usuwanie do aktywnego właściciela. Jeden użytkownik może mieć maksymalnie 50 list,
-a jedna lista maksymalnie 500 albumów.
+Własne kolekcje użytkowników mają stały rodzaj `albums` albo `tracks`. Istniejące
+listy zachowano jako listy albumów. `user_list_items` przechowuje albumy, a
+`user_track_list_items` pojedyncze utwory wraz z ich kolejnością. Triggery bazy
+nie pozwalają mieszać typów pozycji ani dodać tej samej pozycji dwukrotnie.
+
+Lista ma nazwę, opcjonalny opis oraz ustawienie publiczna/prywatna. Publiczne listy
+i ich zawartość są dostępne na profilu autora; prywatne odczytuje wyłącznie
+właściciel. RLS ogranicza tworzenie, edycję i usuwanie do aktywnego właściciela.
+Jeden użytkownik może mieć maksymalnie 50 list, a lista maksymalnie 500 pozycji.
+
+`user_spotify_connections` przechowuje serwerowo zaszyfrowany token odświeżania
+Spotify i nie jest udostępniona klientom przez RLS ani granty. Po eksporcie lista
+zachowuje identyfikator, adres i czas utworzenia jej kopii w Spotify. Pierwsza
+wersja eksportu tworzy jednorazową kopię; nie synchronizuje późniejszych zmian.
 
 ## user_feedback
 

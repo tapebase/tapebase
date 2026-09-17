@@ -288,3 +288,11 @@
 - Pierwsza wersja zachowuje kolejność od ostatnio dodanych. Ręczne układanie pozycji
   można dodać później bez zmiany modelu własności i prywatności.
 - Ograniczenia 50 list na konto i 500 albumów na listę chronią bazę przed nadużyciem.
+# 2026-09-17 — Rozdzielamy listy albumów i playlisty utworów
+
+Rodzaj listy wybiera się przy tworzeniu i nie można go później zmienić. Albumy oraz
+utwory mają osobne tabele pozycji, co upraszcza reguły RLS i zapobiega listom z
+mieszaną zawartością. Eksport do Spotify korzysta z Authorization Code Flow,
+przechowuje wyłącznie zaszyfrowany token odświeżania po stronie serwera i w pierwszej
+wersji tworzy jednorazową kopię playlisty. Pełna synchronizacja pozostaje osobnym
+etapem.

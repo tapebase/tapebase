@@ -8,8 +8,8 @@ import { getAlbumCommunity, getViewerAlbumState } from "@/lib/community";
 import { AlbumCommunitySection } from "@/components/album-community";
 import { AlbumRatingPanel } from "@/components/community-controls";
 import { genreLabel } from "@/lib/genres";
-import { getUserListChoices } from "@/lib/user-lists";
-import { AddAlbumToList } from "@/components/user-list-forms";
+import { getUserAlbumListChoices, getUserTrackListChoicesForTracks } from "@/lib/user-lists";
+import { AddAlbumToList, AddTrackToPlaylist } from "@/components/user-list-forms";
 
 type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props) {
@@ -25,8 +25,11 @@ export default async function AlbumPage({ params }: Props) {
     getTracks(album.id),
     getAlbumCommunity(album.id, viewer),
     getViewerAlbumState(album.id, viewer),
-    viewer ? getUserListChoices(viewer.id, album.id) : Promise.resolve(null),
+    viewer ? getUserAlbumListChoices(viewer.id, album.id) : Promise.resolve(null),
   ]);
+  const trackLists = viewer
+    ? await getUserTrackListChoicesForTracks(viewer.id, tracks.map(track => track.id))
+    : new Map();
   const discs = [...new Set(tracks.map(track => track.disc_number))];
   return <main className="mx-auto max-w-7xl px-6 py-12">
     <Link href="/album" className="mb-6 inline-block text-sm font-semibold hover:underline">← Wszystkie albumy</Link>
@@ -61,6 +64,7 @@ export default async function AlbumPage({ params }: Props) {
               <span className="w-7 shrink-0 pt-1 text-sm font-bold text-zinc-400">{track.track_number}</span>
               <div className="min-w-0 flex-1">{track.spotify_id ? <a href={`https://open.spotify.com/track/${encodeURIComponent(track.spotify_id)}`} target="_blank" rel="noopener noreferrer" className="break-words font-semibold hover:underline">{track.title}<span className="sr-only"> — otwórz w Spotify w nowej karcie</span></a> : <p className="break-words font-semibold">{track.title}</p>}
                 <p className="mt-1 text-sm text-zinc-500"><ArtistLinks artists={orderedArtists(track.credits)} /></p>
+                {viewer && <AddTrackToPlaylist trackId={track.id} lists={trackLists.get(track.id) ?? []} />}
               </div><span className="pt-1 text-sm tabular-nums text-zinc-500">{duration(track.duration_ms)}</span>
             </li>)}</ol>
           </section>)}
