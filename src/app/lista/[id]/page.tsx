@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getViewer } from "@/lib/auth";
-import { getUserListById } from "@/lib/user-lists";
+import { getUserListById, getUserListRating } from "@/lib/user-lists";
 import { Artwork } from "@/components/catalog";
 import { albumPath } from "@/lib/catalog-format";
 import { removeAlbumFromUserList, removeTrackFromUserList } from "@/app/actions/user-lists";
@@ -9,6 +9,7 @@ import { DeleteUserListForm, EditUserListForm } from "@/components/user-list-for
 import { SpotifyPlaylistExport } from "@/components/spotify-playlist-export";
 import { spotifyConnectionStatus } from "@/lib/spotify-user";
 import { PlaylistCoverEditor } from "@/components/playlist-cover-editor";
+import { PlaylistRatingPanel } from "@/components/community-controls";
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ spotify?: string }> };
 
@@ -30,6 +31,9 @@ export default async function UserListPage({ params, searchParams }: Props) {
     ? await spotifyConnectionStatus(viewer.id)
     : null;
   const spotifyStatus = (await searchParams)?.spotify;
+  const rating = list.kind === "tracks" && list.is_public
+    ? await getUserListRating(list.id, viewer?.id ?? null)
+    : null;
 
   return <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
     <Link href={own ? "/listy" : `/u/${encodeURIComponent(list.owner?.username ?? "")}`} className="text-sm font-bold hover:underline">← {own ? "Twoje listy" : "Profil autora"}</Link>
@@ -48,6 +52,16 @@ export default async function UserListPage({ params, searchParams }: Props) {
         </div>
       </div>
     </header>
+
+    {rating && <PlaylistRatingPanel
+      listId={list.id}
+      average={rating.average}
+      ratingCount={rating.ratingCount}
+      initialRating={rating.viewerRating}
+      canRate={Boolean(viewer && !own)}
+      returnPath={`/lista/${list.id}`}
+      disabledMessage={own ? "Autor nie może ocenić własnej playlisty." : undefined}
+    />}
 
     {list.kind === "albums" ? <section className="mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <h2 className="text-2xl font-black">Albumy</h2>

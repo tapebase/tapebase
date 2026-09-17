@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Artwork } from "@/components/catalog";
 import { ExpandableList } from "@/components/expandable-list";
 import type { PublicPlaylistSummary } from "@/lib/user-lists";
+import { RatingStars } from "@/components/community-controls";
 
 function PlaylistCover({ playlist }: { playlist: PublicPlaylistSummary }) {
   if (playlist.cover_url) return <Artwork src={playlist.cover_url} alt={`Okładka playlisty ${playlist.name}`} className="rounded-xl" />;
@@ -32,6 +33,11 @@ export function LatestPlaylists({ playlists }: { playlists: PublicPlaylistSummar
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-500">
             <Link href={`/u/${encodeURIComponent(playlist.username)}`} className="font-semibold hover:underline">@{playlist.username}</Link>
             <span>{playlist.track_count} {playlist.track_count === 1 ? "utwór" : "utworów"}</span>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <strong className="text-lg text-amber-600">{playlist.average === null ? "—" : playlist.average.toFixed(1)}</strong>
+            <RatingStars value={playlist.average ?? 0} size="small" label={playlist.average === null ? "Brak ocen" : `Średnia ${playlist.average.toFixed(1)} na 10`} />
+            <span className="text-xs text-zinc-500">({playlist.rating_count})</span>
           </div>
           {playlist.description && <p className="mt-3 line-clamp-2 text-sm text-zinc-600">{playlist.description}</p>}
         </li>)}

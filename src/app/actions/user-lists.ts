@@ -180,3 +180,24 @@ export async function removeTrackFromUserList(listId: number, trackId: number) {
   revalidatePath("/album/[slug]", "page");
   revalidatePath("/utwory");
 }
+
+export async function saveUserListRating(listId: number, _state: UserListActionState, formData: FormData): Promise<UserListActionState> {
+  const auth = await authorizedClient();
+  if (!auth) return { message: "Zaloguj się, aby ocenić playlistę." };
+  const rating = Number(formData.get("rating"));
+  if (!validId(listId) || !Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
+    return { message: "Wybierz ocenę od 1 do 10." };
+  }
+  const { data: list, error: listError } = await auth.client.from("user_lists")
+    .select("id,user_id,is_public,kind").eq("id", listId).maybeSingle();
+  if (listError || !list || !list.is_public || list.kind !== "tracks") return { message: "Tej playlisty nie można ocenić." };
+  if (list.user_id === auth.userId) return { message: "Nie możesz ocenić własnej playlisty." };
+  const { error } = await auth.client.from("user_list_ratings").upsert(
+    { user_id: auth.userId, list_id: listId, rating },
+    { onConflict: "user_id,list_id" },
+  );
+  if (error) return { message: "Nie udało się zapisać oceny playlisty." };
+  revalidatePath(`/lista/${listId}`);
+  revalidatePath("/");
+  return { success: true, message: "Ocena playlisty została zapisana." };
+}

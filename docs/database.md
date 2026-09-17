@@ -477,6 +477,11 @@ Funkcja `latest_public_playlists` zwraca lekkie podsumowanie najnowszych publicz
 playlist utworów na stronę główną: autora, liczbę utworów oraz maksymalnie cztery
 okładki do grafiki zastępczej. Prywatne listy nie trafiają do wyniku.
 
+`user_list_ratings` przechowuje jedną ocenę 1–10 na użytkownika i publiczną playlistę
+utworów. Autor playlisty nie może ocenić własnej pracy. Widok
+`user_list_rating_summary` udostępnia publiczną średnią i liczbę ocen bez zmiany
+zasad dostępu do prywatnych list.
+
 ## user_feedback
 
 Prywatne zgłoszenia błędów, pomysłów i innych uwag od zalogowanych testerów. Autor

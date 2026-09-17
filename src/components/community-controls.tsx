@@ -10,6 +10,7 @@ import {
   toggleWantToListen,
 } from "@/app/actions/community";
 import type { ViewerAlbumState } from "@/lib/community";
+import { saveUserListRating } from "@/app/actions/user-lists";
 
 const initialState = {};
 
@@ -42,26 +43,29 @@ function RatingPanel({
   initialRating,
   canRate,
   returnPath,
+  disabledMessage,
 }: {
   targetId: number;
-  entity: "album" | "artist";
+  entity: "album" | "artist" | "playlist";
   average: number | null;
   ratingCount: number;
   initialRating: number | null;
   canRate: boolean;
   returnPath: string;
+  disabledMessage?: string;
 }) {
-  const saveAction = entity === "album" ? saveRating : saveArtistRating;
+  const saveAction = entity === "album" ? saveRating : entity === "artist" ? saveArtistRating : saveUserListRating;
   const [state, action, pending] = useActionState(saveAction.bind(null, targetId), initialState);
   const [selected, setSelected] = useState(initialRating);
   const [hovered, setHovered] = useState<number | null>(null);
   const shown = hovered ?? selected ?? 0;
 
-  const entityName = entity === "album" ? "album" : "artystę";
+  const entityName = entity === "album" ? "album" : entity === "artist" ? "artystę" : "playlistę";
+  const headingName = entity === "album" ? "albumu" : entity === "artist" ? "artysty" : "playlisty";
   return <section className="mt-4 rounded-2xl bg-white p-5 shadow-sm" aria-labelledby={`${entity}-rating-heading`}>
     <div className="flex items-end justify-between gap-3">
       <div>
-        <p id={`${entity}-rating-heading`} className="text-xs font-bold uppercase tracking-widest text-zinc-500">Ocena {entity === "album" ? "albumu" : "artysty"}</p>
+        <p id={`${entity}-rating-heading`} className="text-xs font-bold uppercase tracking-widest text-zinc-500">Ocena {headingName}</p>
         <div className="mt-1 flex items-baseline gap-1">
           <strong className="text-4xl font-black">{average === null ? "—" : average.toFixed(1)}</strong>
           <span className="text-sm text-zinc-500">/ 10</span>
@@ -99,7 +103,8 @@ function RatingPanel({
       {pending && <p aria-live="polite" className="mt-2 text-sm text-zinc-500">Zapisywanie oceny…</p>}
       <Feedback state={state} />
     </form> : <div className="mt-5 border-t border-zinc-200 pt-4">
-      <Link href={`/login?next=${encodeURIComponent(returnPath)}`} className="inline-block text-sm font-bold hover:underline">Zaloguj się, aby ocenić →</Link>
+      {disabledMessage ? <p className="text-sm font-semibold text-zinc-500">{disabledMessage}</p>
+        : <Link href={`/login?next=${encodeURIComponent(returnPath)}`} className="inline-block text-sm font-bold hover:underline">Zaloguj się, aby ocenić →</Link>}
     </div>}
   </section>;
 }
@@ -110,6 +115,7 @@ type RatingPanelProps = {
   initialRating: number | null;
   canRate: boolean;
   returnPath: string;
+  disabledMessage?: string;
 };
 
 export function AlbumRatingPanel({ albumId, ...props }: RatingPanelProps & { albumId: number }) {
@@ -118,6 +124,10 @@ export function AlbumRatingPanel({ albumId, ...props }: RatingPanelProps & { alb
 
 export function ArtistRatingPanel({ artistId, ...props }: RatingPanelProps & { artistId: number }) {
   return <RatingPanel targetId={artistId} entity="artist" {...props} />;
+}
+
+export function PlaylistRatingPanel({ listId, ...props }: RatingPanelProps & { listId: number }) {
+  return <RatingPanel targetId={listId} entity="playlist" {...props} />;
 }
 
 export function CommunityControls({ albumId, initial }: { albumId: number; initial: ViewerAlbumState }) {

@@ -25,11 +25,14 @@ export type UserListChoice = { id: number; name: string; is_public: boolean; con
 export type PublicPlaylistSummary = {
   id: number; name: string; description: string | null; cover_url: string | null;
   created_at: string; username: string; track_count: number; sample_cover_urls: string[];
+  average: number | null; rating_count: number;
 };
 type PublicPlaylistSummaryRow = {
   id: number | string; name: string; description: string | null; cover_url: string | null;
   created_at: string; username: string; track_count: number | string; sample_cover_urls: string[] | null;
+  average: number | string | null; rating_count: number | string;
 };
+export type UserListRating = { average: number | null; ratingCount: number; viewerRating: number | null };
 type Related<T> = T | T[] | null;
 type RawAlbumItem = { added_at: string; album: Related<UserListAlbum> };
 type RawTrack = Omit<UserListTrack, "album" | "credits"> & {
@@ -149,5 +152,24 @@ export async function getLatestPublicPlaylists(limit = 12): Promise<PublicPlayli
     username: String(row.username),
     track_count: Number(row.track_count ?? 0),
     sample_cover_urls: Array.isArray(row.sample_cover_urls) ? row.sample_cover_urls.map(String) : [],
+    average: row.average === null ? null : Number(row.average),
+    rating_count: Number(row.rating_count ?? 0),
   }));
+}
+
+export async function getUserListRating(listId: number, viewerId: string | null): Promise<UserListRating> {
+  const publicClient = catalogClient();
+  const viewerClient = viewerId ? await createClient() : null;
+  const [summary, viewerRating] = await Promise.all([
+    publicClient.from("user_list_rating_summary").select("average,rating_count").eq("list_id", listId).maybeSingle(),
+    viewerClient
+      ? viewerClient.from("user_list_ratings").select("rating").eq("list_id", listId).eq("user_id", viewerId).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+  if (summary.error || viewerRating.error) throw new Error("Nie udało się pobrać ocen playlisty.");
+  return {
+    average: summary.data ? Number(summary.data.average) : null,
+    ratingCount: summary.data ? Number(summary.data.rating_count) : 0,
+    viewerRating: viewerRating.data ? Number(viewerRating.data.rating) : null,
+  };
 }
