@@ -44,10 +44,13 @@ jobs:
           supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/plain/schema.sql
           supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/plain/data.sql --data-only --use-copy \
             -x "storage.buckets_vectors" -x "storage.vector_indexes"
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/plain/public-data.sql \
+            --data-only --use-copy --schema public
           test "$(wc -c < backup/plain/roles.sql)" -gt 100
           test "$(wc -c < backup/plain/schema.sql)" -gt 1000
           test "$(wc -c < backup/plain/data.sql)" -gt 1000
-          (cd backup/plain && sha256sum roles.sql schema.sql data.sql > SHA256SUMS)
+          test "$(wc -c < backup/plain/public-data.sql)" -gt 1000
+          (cd backup/plain && sha256sum roles.sql schema.sql data.sql public-data.sql > SHA256SUMS)
           printf 'created_at=%s\ncommit=%s\n' "$(date -u +%FT%TZ)" "$GITHUB_SHA" > backup/plain/metadata.txt
 
       - name: Encrypt and verify the backup package

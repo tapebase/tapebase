@@ -2,7 +2,7 @@
 set -euo pipefail
 
 backup_dir="${1:-}"
-if [[ -z "$backup_dir" || ! -f "$backup_dir/roles.sql" || ! -f "$backup_dir/schema.sql" || ! -f "$backup_dir/data.sql" ]]; then
+if [[ -z "$backup_dir" || ! -f "$backup_dir/roles.sql" || ! -f "$backup_dir/schema.sql" || ! -f "$backup_dir/data.sql" || ! -f "$backup_dir/public-data.sql" ]]; then
   echo "Usage: restore-check.sh <decrypted-backup-directory>" >&2
   exit 1
 fi
@@ -28,11 +28,12 @@ restore_url="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
 # production roles dump would try to alter reserved roles such as
 # supabase_admin, which the local postgres user is intentionally forbidden to
 # modify. The roles file remains part of every encrypted backup for recovery in
-# a fresh hosted project; this drill restores the application schema and data.
+# a fresh hosted project. The complete data dump also remains in the archive,
+# while this drill uses the version-independent public application data dump.
 psql --dbname "$restore_url" --single-transaction --variable ON_ERROR_STOP=1 \
   --file "$backup_dir/schema.sql" \
   --command "SET session_replication_role = replica" \
-  --file "$backup_dir/data.sql"
+  --file "$backup_dir/public-data.sql"
 
 psql --dbname "$restore_url" --variable ON_ERROR_STOP=1 <<'SQL'
 do $$

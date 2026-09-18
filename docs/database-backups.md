@@ -6,7 +6,8 @@ Workflow `.github/workflows/database-backup.yml` wykonuje logiczny eksport Supab
 
 - ról bazy (`roles.sql`),
 - schematu, funkcji, polityk RLS i wyzwalaczy (`schema.sql`),
-- danych, w tym rekordów użytkowników Auth (`data.sql`).
+- danych, w tym rekordów użytkowników Auth (`data.sql`),
+- osobnego eksportu danych aplikacji ze schematu `public` (`public-data.sql`) do automatycznej próby odtworzenia.
 
 Pliki są pakowane, szyfrowane AES-256-CBC z PBKDF2 i przechowywane jako artefakt GitHub Actions przez 30 dni. Repozytorium jest publiczne, dlatego jawne pliki SQL nigdy nie są przesyłane do GitHub.
 
@@ -16,7 +17,7 @@ Harmonogram:
 - w niedzielę o 02:45 UTC: dodatkowo pełna próba odtworzenia w odizolowanym lokalnym Supabase,
 - ręczne uruchomienie: eksport oraz pełna próba odtworzenia.
 
-Próba lokalna odtwarza schemat i dane aplikacji. Plik `roles.sql` jest objęty sumą kontrolną i pozostaje w kopii, ale nie jest odtwarzany lokalnie, ponieważ lokalny Supabase ma już własne chronione role systemowe (między innymi `supabase_admin`).
+Próba lokalna odtwarza schemat i `public-data.sql`. Pliki `roles.sql` oraz `data.sql` są objęte sumą kontrolną i pozostają w kopii, ale nie są odtwarzane lokalnie. Lokalny Supabase ma własne chronione role systemowe, a wersje jego wewnętrznych tabel Auth i Storage mogą chwilowo różnić się od produkcji.
 
 ## Wymagane sekrety GitHub
 
