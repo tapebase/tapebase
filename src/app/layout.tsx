@@ -19,6 +19,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: { default: "TAPEBASE — polska baza albumów", template: "%s | TAPEBASE" },
   description: "Albumy polskiego rapu, wykonawcy i tracklisty. Odkrywaj katalog TAPEBASE.",
+  icons: {
+    icon: [
+      { url: "/favicon-t-light-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-t-light-64.png", type: "image/png", sizes: "64x64" },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -33,9 +39,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-t-light-32.png" data-tapebase-favicon="32" />
-        <link rel="icon" type="image/png" sizes="64x64" href="/favicon-t-light-64.png" data-tapebase-favicon="64" />
-        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("tapebase-theme")==="light"?"light":"dark";document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t;document.querySelectorAll("[data-tapebase-favicon]").forEach(function(f){f.href="/favicon-t-"+t+"-"+f.dataset.tapebaseFavicon+".png"})}catch(e){}` }} />
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("tapebase-theme")==="light"?"light":"dark",u=function(){document.querySelectorAll('link[rel="icon"][href*="favicon-t-"]').forEach(function(f){var s=(f.getAttribute("sizes")||"64x64").split("x")[0];f.href="/favicon-t-"+t+"-"+s+".png"})};document.documentElement.classList.toggle("dark",t==="dark");document.documentElement.style.colorScheme=t;u();new MutationObserver(u).observe(document.head,{childList:true,subtree:true})}catch(e){}` }} />
       </head>
       <body className="min-h-full flex flex-col bg-[#f6f4ef] text-zinc-950">
         <Suspense fallback={<header className="border-b border-zinc-200 bg-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-5"><BrandLogo /><span className="text-sm text-zinc-400">Ładowanie konta…</span></div></header>}>

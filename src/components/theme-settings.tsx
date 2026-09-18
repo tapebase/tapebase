@@ -10,8 +10,8 @@ const changeEvent = "tapebase-theme-change";
 function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", theme === "dark");
   document.documentElement.style.colorScheme = theme;
-  document.querySelectorAll<HTMLLinkElement>("[data-tapebase-favicon]").forEach(icon => {
-    const size = icon.dataset.tapebaseFavicon ?? "64";
+  document.querySelectorAll<HTMLLinkElement>('link[rel="icon"][href*="favicon-t-"]').forEach(icon => {
+    const size = icon.sizes.value.split("x")[0] || "64";
     icon.href = `/favicon-t-${theme}-${size}.png`;
   });
 }
