@@ -1,0 +1,91 @@
+name: Database backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "15 2 * * *"
+    - cron: "45 2 * * 0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check backup configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL" || { echo "Missing SUPABASE_DB_URL secret"; exit 1; }
+          test ${#BACKUP_ENCRYPTION_KEY} -ge 32 || { echo "BACKUP_ENCRYPTION_KEY must contain at least 32 characters"; exit 1; }
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Export roles, schema and data
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup/plain
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/plain/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/plain/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/plain/data.sql --data-only --use-copy \
+            -x "storage.buckets_vectors" -x "storage.vector_indexes"
+          test "$(wc -c < backup/plain/roles.sql)" -gt 100
+          test "$(wc -c < backup/plain/schema.sql)" -gt 1000
+          test "$(wc -c < backup/plain/data.sql)" -gt 1000
+          (cd backup/plain && sha256sum roles.sql schema.sql data.sql > SHA256SUMS)
+          printf 'created_at=%s\ncommit=%s\n' "$(date -u +%FT%TZ)" "$GITHUB_SHA" > backup/plain/metadata.txt
+
+      - name: Encrypt and verify the backup package
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -C backup/plain -czf backup/database-backup.tar.gz .
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
+            -in backup/database-backup.tar.gz \
+            -out backup/database-backup.tar.gz.enc \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          sha256sum backup/database-backup.tar.gz.enc > backup/database-backup.tar.gz.enc.sha256
+          rm -rf backup/plain backup/database-backup.tar.gz
+          mkdir -p backup/verified
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+            -in backup/database-backup.tar.gz.enc \
+            -out backup/verified.tar.gz \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          tar -C backup/verified -xzf backup/verified.tar.gz
+          (cd backup/verified && sha256sum -c SHA256SUMS)
+
+      - name: Restore drill in an isolated Supabase
+        if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 2 * * 0'
+        shell: bash
+        run: scripts/backup/restore-check.sh backup/verified
+
+      - name: Remove decrypted data
+        if: always()
+        shell: bash
+        run: rm -rf backup/verified backup/verified.tar.gz
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: tapebase-database-${{ github.run_id }}
+          path: |
+            backup/database-backup.tar.gz.enc
+            backup/database-backup.tar.gz.enc.sha256
+          if-no-files-found: error
+          retention-days: 30
+
