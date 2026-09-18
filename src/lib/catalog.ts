@@ -47,19 +47,19 @@ function checked<T>(result: { data: T | null; error: unknown }): T {
   if (result.error || result.data === null) throw new Error("Nie udało się pobrać katalogu.");
   return result.data;
 }
-async function listAlbumsUncached(q = "", page = 1, limit = pageSize): Promise<{ rows: Album[]; count: number }> {
+async function listAlbumsUncached(q = "", page = 1, limit = pageSize, genre: MusicGenre | "" = ""): Promise<{ rows: Album[]; count: number }> {
   const client = catalogClient();
   if (q) {
     const offset = (page - 1) * limit;
-    const matchResult = await client.rpc("search_album_ids", {
-      search_query: q, result_offset: offset, result_limit: limit,
+    const matchResult = await client.rpc("search_album_ids_filtered", {
+      search_query: q, search_genre: genre || null, result_offset: offset, result_limit: limit,
     }).returns<{ album_id: number; total_count: number }[]>();
     const matches = checked(matchResult as unknown as {
       data: { album_id: number; total_count: number }[] | null;
       error: unknown;
     });
     if (!matches.length) {
-      if (page > 1) return { rows: [], count: (await listAlbumsUncached(q, 1, 1)).count };
+      if (page > 1) return { rows: [], count: (await listAlbumsUncached(q, 1, 1, genre)).count };
       return { rows: [], count: 0 };
     }
     const result = await client.from("albums").select(albumFields)
@@ -69,8 +69,9 @@ async function listAlbumsUncached(q = "", page = 1, limit = pageSize): Promise<{
   }
   const query = client.from("albums").select(albumFields, { count: "exact" })
     .order("created_at", { ascending: false }).order("id", { ascending: false });
+  if (genre) query.eq("genre", genre);
   const result = await query.range((page - 1) * limit, page * limit - 1).returns<Album[]>();
-  if (result.error?.code === "PGRST103" && page > 1) return { rows: [] as Album[], count: (await listAlbumsUncached(q, 1, 1)).count };
+  if (result.error?.code === "PGRST103" && page > 1) return { rows: [] as Album[], count: (await listAlbumsUncached(q, 1, 1, genre)).count };
   return { rows: checked(result), count: result.count ?? 0 };
 }
 export const listAlbums = unstable_cache(listAlbumsUncached, ["catalog-albums"], { revalidate: 60, tags: ["catalog"] });

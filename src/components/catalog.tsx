@@ -50,8 +50,8 @@ export async function Header() {
             </div>
           </div>
         </div>
-        <Link href="/#ostatnio-dodane">Ostatnio dodane</Link>
         <Link href="/zglos">Zgłoś album / artystę</Link>
+        <Link href="/#ostatnio-dodane">Ostatnio dodane</Link>
         {viewer && <FeedbackLink />}
       </nav>{viewer ? <div className="hidden shrink-0 items-center gap-1 lg:flex"><NotificationLink count={unreadNotifications} /><UserMenu username={viewer.username} role={viewer.role} /></div> : <Link href="/login" className="hidden shrink-0 rounded-xl bg-zinc-950 px-4 py-2 text-sm font-bold text-white lg:inline-flex">Zaloguj się</Link>}
     </div>
