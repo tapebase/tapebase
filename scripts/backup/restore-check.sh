@@ -21,11 +21,15 @@ cleanup() {
 trap cleanup EXIT
 
 supabase init --force
-timeout 600 supabase start -x studio,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor
+timeout 600 supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,supavisor
 
 restore_url="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+# Local Supabase already provisions its protected platform roles. Replaying the
+# production roles dump would try to alter reserved roles such as
+# supabase_admin, which the local postgres user is intentionally forbidden to
+# modify. The roles file remains part of every encrypted backup for recovery in
+# a fresh hosted project; this drill restores the application schema and data.
 psql --dbname "$restore_url" --single-transaction --variable ON_ERROR_STOP=1 \
-  --file "$backup_dir/roles.sql" \
   --file "$backup_dir/schema.sql" \
   --command "SET session_replication_role = replica" \
   --file "$backup_dir/data.sql"
@@ -50,4 +54,3 @@ $$;
 SQL
 
 echo "Restore check completed successfully in an isolated local database."
-

@@ -16,6 +16,8 @@ Harmonogram:
 - w niedzielę o 02:45 UTC: dodatkowo pełna próba odtworzenia w odizolowanym lokalnym Supabase,
 - ręczne uruchomienie: eksport oraz pełna próba odtworzenia.
 
+Próba lokalna odtwarza schemat i dane aplikacji. Plik `roles.sql` jest objęty sumą kontrolną i pozostaje w kopii, ale nie jest odtwarzany lokalnie, ponieważ lokalny Supabase ma już własne chronione role systemowe (między innymi `supabase_admin`).
+
 ## Wymagane sekrety GitHub
 
 W ustawieniach repozytorium `Settings → Secrets and variables → Actions` należy dodać:
@@ -64,4 +66,3 @@ Nie należy uznawać samego powstania pliku za udaną kopię. Ostatnie ręczne l
 ## Ograniczenie
 
 Kopia bazy zawiera metadane Supabase Storage, ale nie same pliki z bucketów, na przykład avatarów i okładek playlist. Pliki Storage wymagają osobnej kopii obiektowej.
-
