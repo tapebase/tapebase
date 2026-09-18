@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signIn, signUp } from "./actions";
 import type { AuthFormState } from "@/lib/auth-validation";
+import { TurnstileField } from "./turnstile-field";
 
 const initialState: AuthFormState = {};
 const fieldClass = "mt-2 w-full rounded-xl border border-zinc-300 bg-white px-4 py-3";
@@ -22,6 +23,7 @@ export function SignInForm({ next }: { next: string }) {
     </label>
     {state.errors?.password && <p className="text-sm text-red-700">{state.errors.password}</p>}
     <Link href="/reset-hasla" className="inline-block text-sm font-semibold hover:underline">Nie pamiętasz hasła?</Link>
+    <TurnstileField resetKey={`${state.success ?? false}:${state.message ?? ""}`} />
     {state.message && <p aria-live="polite" className="text-sm text-red-700">{state.message}</p>}
     <button disabled={pending} className="w-full rounded-xl bg-zinc-950 px-5 py-3 font-bold text-white disabled:opacity-60">
       {pending ? "Logowanie…" : "Zaloguj się"}
@@ -46,6 +48,7 @@ export function SignUpForm({ next }: { next: string }) {
       <input className={fieldClass} name="password" type="password" autoComplete="new-password" minLength={8} required />
     </label>
     {state.errors?.password && <p className="text-sm text-red-700">{state.errors.password}</p>}
+    <TurnstileField resetKey={`${state.success ?? false}:${state.message ?? ""}`} />
     {state.message && <p aria-live="polite" className={`text-sm ${state.success ? "text-emerald-700" : "text-red-700"}`}>{state.message}</p>}
     <button disabled={pending || state.success} className="w-full rounded-xl bg-zinc-950 px-5 py-3 font-bold text-white disabled:opacity-60">
       {pending ? "Tworzenie…" : "Utwórz konto"}

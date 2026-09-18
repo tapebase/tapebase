@@ -233,6 +233,10 @@ Krok:
 
 Jeden użytkownik może mieć jedną aktywną ocenę albumu.
 
+Zapisy ocen albumów, artystów, okładek i publicznych playlist korzystają ze wspólnego
+limitu 30 operacji na 10 minut dla jednego konta. Limit jest egzekwowany wyzwalaczem
+w bazie, więc obejmuje również żądania wysyłane poza interfejsem aplikacji.
+
 ---
 
 ## album_cover_ratings

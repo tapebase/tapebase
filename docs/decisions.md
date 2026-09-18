@@ -305,3 +305,12 @@ wysłaniem. TAPEBASE zapisuje przygotowaną wersję w Supabase Storage. Przy pie
 eksporcie playlisty ta sama grafika trafia do Spotify przez oficjalny endpoint okładek
 i zakres `ugc-image-upload`. Późniejsza zmiana wymaga jawnego przycisku aktualizacji,
 ponieważ eksport nadal jest jednorazową kopią, a nie synchronizacją dwukierunkową.
+
+# 2026-09-18 — Ochrona ocen i rejestracji przed automatyzacją
+
+Zmiana istniejącej oceny pozostaje dozwolona i nadal zastępuje jeden rekord
+użytkownika. Wszystkie rodzaje ocen mają wspólny limit 30 zapisów na 10 minut,
+egzekwowany w PostgreSQL. Dzięki temu interfejs nie utrudnia poprawiania oceny, a
+bezpośrednie żądania do API nie omijają limitu. Logowanie i rejestracja obsługują
+Cloudflare Turnstile przez mechanizm CAPTCHA Supabase; integracja uaktywnia się po
+ustawieniu publicznego klucza widżetu i sekretu dostawcy w panelu Supabase.

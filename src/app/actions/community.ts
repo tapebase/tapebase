@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { ratingErrorMessage } from "@/lib/rating-errors";
 
 export type CommunityActionState = { message?: string; success?: boolean };
 
@@ -49,7 +50,7 @@ export async function saveRating(
     { user_id: auth.userId, album_id: albumId, rating },
     { onConflict: "user_id,album_id" },
   );
-  if (error) return { message: "Nie udało się zapisać oceny." };
+  if (error) return { message: ratingErrorMessage(error, "Nie udało się zapisać oceny.") };
   revalidatePath("/album/[slug]", "page");
   revalidatePath("/profil");
   return { success: true, message: "Ocena zapisana." };
@@ -71,7 +72,7 @@ export async function saveCoverRating(
     { user_id: auth.userId, album_id: albumId, rating },
     { onConflict: "user_id,album_id" },
   );
-  if (error) return { message: "Nie udało się zapisać oceny okładki." };
+  if (error) return { message: ratingErrorMessage(error, "Nie udało się zapisać oceny okładki.") };
   revalidatePath("/album/[slug]", "page");
   revalidatePath("/rankingi");
   return { success: true, message: "Ocena okładki zapisana." };
@@ -93,7 +94,7 @@ export async function saveArtistRating(
     { user_id: auth.userId, artist_id: artistId, rating },
     { onConflict: "user_id,artist_id" },
   );
-  if (error) return { message: "Nie udało się zapisać oceny artysty." };
+  if (error) return { message: ratingErrorMessage(error, "Nie udało się zapisać oceny artysty.") };
   revalidatePath("/artist/[slug]", "page");
   revalidatePath("/profil");
   return { success: true, message: "Ocena artysty zapisana." };

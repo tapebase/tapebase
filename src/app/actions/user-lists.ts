@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { UserListKind } from "@/lib/user-lists";
+import { ratingErrorMessage } from "@/lib/rating-errors";
 
 export type UserListActionState = { message?: string; success?: boolean; listId?: number; kind?: UserListKind };
 
@@ -196,7 +197,7 @@ export async function saveUserListRating(listId: number, _state: UserListActionS
     { user_id: auth.userId, list_id: listId, rating },
     { onConflict: "user_id,list_id" },
   );
-  if (error) return { message: "Nie udało się zapisać oceny playlisty." };
+  if (error) return { message: ratingErrorMessage(error, "Nie udało się zapisać oceny playlisty.") };
   revalidatePath(`/lista/${listId}`);
   revalidatePath("/");
   return { success: true, message: "Ocena playlisty została zapisana." };
