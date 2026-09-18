@@ -72,7 +72,7 @@ jobs:
       - name: Restore drill in an isolated Supabase
         if: github.event_name == 'workflow_dispatch' || github.event.schedule == '45 2 * * 0'
         shell: bash
-        run: scripts/backup/restore-check.sh backup/verified
+        run: bash scripts/backup/restore-check.sh backup/verified
 
       - name: Remove decrypted data
         if: always()
@@ -88,4 +88,3 @@ jobs:
             backup/database-backup.tar.gz.enc.sha256
           if-no-files-found: error
           retention-days: 30
-
