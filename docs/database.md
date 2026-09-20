@@ -542,8 +542,10 @@ danych uwierzytelniania.
 ## community_user_leaderboard
 
 Publiczna funkcja rankingu aktywności z ograniczonym okresem i liczbą wyników.
-Liczy wyłącznie skutecznie zaimportowane albumy, widoczne komentarze główne jako
-recenzje oraz bieżące oceny albumów. Odpowiedzi w dyskusjach nie zwiększają wyniku.
+Liczy skutecznie zaimportowane albumy, zaakceptowane biografie, widoczne komentarze
+główne jako recenzje oraz bieżące oceny albumów i artystów. Odpowiedzi w dyskusjach
+nie zwiększają wyniku. Wartość `period_days = 0` obejmuje pełną historię, a publiczny
+ranking może zwrócić najwyżej 100 użytkowników.
 
 ## youtube_channels, youtube_videos i artist_videos
 

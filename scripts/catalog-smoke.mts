@@ -16,7 +16,7 @@ const home = await page("/");
 assert.ok(home.includes("Ostatnio dodane"));
 assert.ok(home.includes("Ostatnie komentarze"));
 assert.ok(!home.includes("/spotify-logo.svg"));
-assert.ok(home.includes('href="/rankingi"') && home.includes('href="/rankingi?typ=artysci"') && home.includes('href="/rankingi?typ=albumy"'));
+assert.ok(home.includes('href="/rankingi"') && home.includes('href="/rankingi?typ=artysci"') && home.includes('href="/rankingi?typ=albumy"') && home.includes('href="/rankingi?typ=uzytkownicy"'));
 const rankings = await page("/rankingi");
 assert.ok(rankings.includes('id="top-artysci"') && rankings.includes("TOP artyści"));
 assert.ok(rankings.includes('id="top-albumy"') && rankings.includes("TOP albumy"));
@@ -33,6 +33,8 @@ const filteredRanking = await page("/rankingi?typ=albumy&rok=2015&rodzaj=album&g
 assert.ok(filteredRanking.includes("Ezoteryka") && !filteredRanking.includes("Dla fanek euforii"));
 const emptyGenreRanking = await page("/rankingi?typ=albumy&gatunek=rock");
 assert.ok(emptyGenreRanking.includes("Brak ocenionych albumów dla wybranych filtrów."));
+const userRanking = await page("/rankingi?typ=uzytkownicy&okres=30");
+assert.ok(userRanking.includes('id="top-uzytkownicy"') && userRanking.includes("TOP użytkowników") && userRanking.includes("Cały czas"));
 const albums = await page("/album");
 const albumPaths = [...new Set([...albums.matchAll(/href="(\/album\/[^"?#]+)"/g)].map(match => match[1]))];
 assert.ok(albumPaths.length > 0, "No real albums displayed");

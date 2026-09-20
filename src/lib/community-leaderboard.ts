@@ -8,6 +8,7 @@ export type ActiveUser = {
   username: string;
   avatar_url: string | null;
   added_albums: number;
+  biographies: number;
   reviews: number;
   ratings: number;
   activity_score: number;
@@ -22,6 +23,7 @@ async function getMostActiveUsersUncached(limit = 5, days = 30): Promise<ActiveU
   return ((data ?? []) as ActiveUser[]).map(user => ({
     ...user,
     added_albums: Number(user.added_albums),
+    biographies: Number(user.biographies),
     reviews: Number(user.reviews),
     ratings: Number(user.ratings),
     activity_score: Number(user.activity_score),

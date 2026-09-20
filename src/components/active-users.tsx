@@ -20,14 +20,15 @@ export function ActiveUsers({ users }: { users: ActiveUser[] }) {
             <Link href={`/u/${encodeURIComponent(user.username)}`}><UserAvatar username={user.username} src={user.avatar_url} size="small" /></Link>
             <Link href={`/u/${encodeURIComponent(user.username)}`} className="min-w-0 truncate font-black hover:underline">@{user.username}</Link>
           </div>
-          <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <dl className="mt-4 grid grid-cols-4 gap-2 text-center">
             <div><dt className="text-[11px] text-zinc-500">Albumy</dt><dd className="font-black">{user.added_albums}</dd></div>
+            <div><dt className="text-[11px] text-zinc-500">Biografie</dt><dd className="font-black">{user.biographies}</dd></div>
             <div><dt className="text-[11px] text-zinc-500">Recenzje</dt><dd className="font-black">{user.reviews}</dd></div>
             <div><dt className="text-[11px] text-zinc-500">Oceny</dt><dd className="font-black">{user.ratings}</dd></div>
           </dl>
         </li>)}
       </ExpandableList> : <p className="mt-5 rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-600">W ostatnich 30 dniach nie odnotowano jeszcze aktywności.</p>}
-      <p className="mt-4 text-xs text-zinc-500">Zaimportowany album: 5 pkt · recenzja albumu: 3 pkt · ocena albumu: 1 pkt.</p>
+      <p className="mt-4 text-xs text-zinc-500">Dodany album: 5 pkt · zaakceptowana biografia: 4 pkt · recenzja: 3 pkt · ocena albumu lub artysty: 1 pkt.</p>
     </div>
   </section>;
 }

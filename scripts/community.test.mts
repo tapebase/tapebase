@@ -38,6 +38,7 @@ const typedListsMigration = await readFile(new URL("../supabase/migrations/20260
 const protectSpotifyExportMigration = await readFile(new URL("../supabase/migrations/202609170038_protect_spotify_export_metadata.sql", import.meta.url), "utf8");
 const playlistTrackSearchMigration = await readFile(new URL("../supabase/migrations/202609170039_playlist_track_search.sql", import.meta.url), "utf8");
 const ratingRateLimitsMigration = await readFile(new URL("../supabase/migrations/202609180045_rating_rate_limits.sql", import.meta.url), "utf8");
+const userActivityRankingsMigration = await readFile(new URL("../supabase/migrations/202609200046_user_activity_rankings.sql", import.meta.url), "utf8");
 const draftSchema = `
   create role anon;
   create role authenticated;
@@ -186,6 +187,7 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(typedListsMigration);
     await db.exec(protectSpotifyExportMigration);
     await db.exec(playlistTrackSearchMigration);
+    await db.exec(userActivityRankingsMigration);
     assert.deepEqual((await db.query("select distinct country_code from public.artists")).rows, [{ country_code: "PL" }]);
     assert.deepEqual((await db.query("select distinct genre from public.albums")).rows, [{ genre: "rap" }]);
     await db.query("insert into public.tracks(album_id,spotify_id,title) values (1,'1234567890123456789012','Utwór')");
@@ -247,8 +249,8 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     assert.equal((await db.query<{ count: string }>("select public.accepted_biography_count($1)::text as count", [alice])).rows[0].count, "0");
     await db.exec("reset role");
     await db.query("update public.users set role='user' where id=$1", [bob]);
-    const leaderboard = await db.query<{ username: string; activity_score: bigint }>(
-      "select username, activity_score from public.community_user_leaderboard(30, 5)",
+    const leaderboard = await db.query<{ username: string; activity_score: bigint; biographies: bigint }>(
+      "select username, activity_score, biographies from public.community_user_leaderboard(0, 100)",
     );
     assert.equal(leaderboard.rows[0]?.username, "Alice");
     assert.ok(Number(leaderboard.rows[0]?.activity_score ?? 0) > 0);

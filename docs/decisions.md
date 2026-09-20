@@ -314,3 +314,11 @@ egzekwowany w PostgreSQL. Dzięki temu interfejs nie utrudnia poprawiania oceny,
 bezpośrednie żądania do API nie omijają limitu. Logowanie i rejestracja obsługują
 Cloudflare Turnstile przez mechanizm CAPTCHA Supabase; integracja uaktywnia się po
 ustawieniu publicznego klucza widżetu i sekretu dostawcy w panelu Supabase.
+
+# 2026-09-20 — Publiczny ranking aktywności użytkowników
+
+„TOP użytkowników” jest czwartym rodzajem rankingu po artystach, albumach i
+okładkach. Zestawienie ma okresy 7 dni, 30 dni i całą historię. Punkty premiują
+działania tworzące katalog i treści: dodany album ma 5 punktów, zaakceptowana
+biografia 4, recenzja 3, a ocena albumu lub artysty 1. Odpowiedzi w dyskusjach nie
+zwiększają wyniku, a zawieszone konta nie są pokazywane.
