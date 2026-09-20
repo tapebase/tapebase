@@ -322,3 +322,6 @@ okładkach. Zestawienie ma okresy 7 dni, 30 dni i całą historię. Punkty premi
 działania tworzące katalog i treści: dodany album ma 5 punktów, zaakceptowana
 biografia 4, recenzja 3, a ocena albumu lub artysty 1. Odpowiedzi w dyskusjach nie
 zwiększają wyniku, a zawieszone konta nie są pokazywane.
+Pozycja użytkownika jest porównywana z ostatnim zapisanym dziennym zestawieniem dla
+tego samego okresu. Awans jest zielony, spadek czerwony, brak zmiany neutralny, a
+osoba nieobecna w poprzednim zestawieniu otrzymuje oznaczenie „Nowy”.

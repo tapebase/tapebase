@@ -6,7 +6,7 @@ import { albumPath, artistPath, orderedArtists } from "@/lib/catalog-format";
 import { countryFilter } from "@/lib/countries";
 import { MUSIC_GENRES, genreLabel, isMusicGenre } from "@/lib/genres";
 import { UserAvatar } from "@/components/user-avatar";
-import { getMostActiveUsers } from "@/lib/community-leaderboard";
+import { getRankedActiveUsers } from "@/lib/community-leaderboard";
 
 export const metadata = {
   title: "Rankingi",
@@ -29,6 +29,13 @@ function countLabel(value: number, one: string, few: string, many: string) {
   const last = value % 10;
   const label = value === 1 ? one : last >= 2 && last <= 4 && !(lastTwo >= 12 && lastTwo <= 14) ? few : many;
   return `${value} ${label}`;
+}
+
+function PositionChange({ change, isNew }: { change: number | null; isNew: boolean }) {
+  if (isNew || change === null) return <span className="text-xs font-black uppercase text-emerald-600">Nowy</span>;
+  if (change > 0) return <span className="text-sm font-black text-emerald-600" aria-label={`Awans o ${change} pozycji`}>↑ {change}</span>;
+  if (change < 0) return <span className="text-sm font-black text-red-600" aria-label={`Spadek o ${Math.abs(change)} pozycji`}>↓ {Math.abs(change)}</span>;
+  return <span className="text-sm font-bold text-zinc-400" aria-label="Pozycja bez zmian">—</span>;
 }
 
 type RankingsPageProps = {
@@ -68,7 +75,7 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
     showArtists ? topRatedArtists(100, 1, country) : Promise.resolve([]),
     showAlbums ? topRatedAlbums(100, albumFilters) : Promise.resolve([]),
     showCovers ? topRatedAlbumCovers(100, albumFilters) : Promise.resolve([]),
-    showUsers ? getMostActiveUsers(100, periodDays) : Promise.resolve([]),
+    showUsers ? getRankedActiveUsers(100, periodDays) : Promise.resolve([]),
   ]);
 
   return <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-12">
@@ -140,12 +147,13 @@ export default async function RankingsPage({ searchParams }: RankingsPageProps) 
       {showUsers && <section id="top-uzytkownicy" className="scroll-mt-6 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
         <div className="flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Ranking społeczności</p><h2 className="mt-1 text-3xl font-black">TOP użytkowników</h2></div><span className="text-sm text-zinc-500">{users.length} pozycji</span></div>
         {users.length ? <ol className="mt-6 space-y-3">{users.map((user, index) => <li key={user.user_id} className="grid grid-cols-[2rem_3rem_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-zinc-100 p-3 sm:grid-cols-[2rem_3rem_minmax(0,1fr)_auto]">
-          <span className="text-center text-lg font-black text-zinc-400">{index + 1}</span>
+          <span className="text-center text-lg font-black text-zinc-400">{user.rank_position || index + 1}</span>
           <Link href={`/u/${encodeURIComponent(user.username)}`}><UserAvatar username={user.username} src={user.avatar_url} size="small" /></Link>
           <div className="min-w-0"><Link href={`/u/${encodeURIComponent(user.username)}`} className="block truncate font-black hover:underline">@{user.username}</Link><p className="mt-1 text-xs text-zinc-500">{countLabel(user.added_albums, "album", "albumy", "albumów")} · {countLabel(user.biographies, "biografia", "biografie", "biografii")} · {countLabel(user.reviews, "recenzja", "recenzje", "recenzji")} · {countLabel(user.ratings, "ocena", "oceny", "ocen")}</p></div>
-          <div className="text-right"><strong className="text-2xl font-black text-amber-600">{user.activity_score}</strong><p className="text-xs text-zinc-500">pkt</p></div>
+          <div className="flex min-w-16 flex-col items-end"><PositionChange change={user.position_change} isNew={user.is_new} /><strong className="mt-1 text-2xl font-black text-amber-600">{user.activity_score}</strong><p className="text-xs text-zinc-500">pkt</p></div>
         </li>)}</ol> : <div className="mt-6"><Empty>Brak aktywności użytkowników w wybranym okresie.</Empty></div>}
         <p className="mt-5 text-xs text-zinc-500">Dodany album: 5 pkt · zaakceptowana biografia: 4 pkt · recenzja: 3 pkt · ocena albumu lub artysty: 1 pkt.</p>
+        <p className="mt-2 text-xs text-zinc-500">Zielona strzałka oznacza awans względem poprzedniego dziennego zestawienia, czerwona — spadek.</p>
       </section>}
     </div>
   </main>;

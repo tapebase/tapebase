@@ -39,6 +39,7 @@ const protectSpotifyExportMigration = await readFile(new URL("../supabase/migrat
 const playlistTrackSearchMigration = await readFile(new URL("../supabase/migrations/202609170039_playlist_track_search.sql", import.meta.url), "utf8");
 const ratingRateLimitsMigration = await readFile(new URL("../supabase/migrations/202609180045_rating_rate_limits.sql", import.meta.url), "utf8");
 const userActivityRankingsMigration = await readFile(new URL("../supabase/migrations/202609200046_user_activity_rankings.sql", import.meta.url), "utf8");
+const userRankingMovementMigration = await readFile(new URL("../supabase/migrations/202609200047_user_ranking_movement.sql", import.meta.url), "utf8");
 const draftSchema = `
   create role anon;
   create role authenticated;
@@ -188,6 +189,7 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     await db.exec(protectSpotifyExportMigration);
     await db.exec(playlistTrackSearchMigration);
     await db.exec(userActivityRankingsMigration);
+    await db.exec(userRankingMovementMigration);
     assert.deepEqual((await db.query("select distinct country_code from public.artists")).rows, [{ country_code: "PL" }]);
     assert.deepEqual((await db.query("select distinct genre from public.albums")).rows, [{ genre: "rap" }]);
     await db.query("insert into public.tracks(album_id,spotify_id,title) values (1,'1234567890123456789012','Utwór')");
@@ -254,6 +256,12 @@ test("community migration connects Auth, RLS, ratings, comments and lists", asyn
     );
     assert.equal(leaderboard.rows[0]?.username, "Alice");
     assert.ok(Number(leaderboard.rows[0]?.activity_score ?? 0) > 0);
+    const movement = await db.query<{ username: string; position_change: number | null; is_new: boolean }>(
+      "select username, position_change, is_new from public.community_user_leaderboard_with_movement(30, 100)",
+    );
+    assert.equal(movement.rows[0]?.username, "Alice");
+    assert.equal(movement.rows[0]?.position_change, 0);
+    assert.equal(movement.rows[0]?.is_new, false);
     assert.deepEqual((await db.query("select catalog_visible from public.artists")).rows, [{ catalog_visible: true }]);
     const worker = "33333333-3333-4333-8333-333333333333";
     await db.query(`insert into public.catalog_import_jobs

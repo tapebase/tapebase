@@ -547,6 +547,12 @@ główne jako recenzje oraz bieżące oceny albumów i artystów. Odpowiedzi w d
 nie zwiększają wyniku. Wartość `period_days = 0` obejmuje pełną historię, a publiczny
 ranking może zwrócić najwyżej 100 użytkowników.
 
+`community_user_rank_snapshots` zapisuje pozycję i wynik najwyżej 100 osób osobno
+dla okresów 7 dni, 30 dni i całej historii. Funkcja
+`community_user_leaderboard_with_movement` aktualizuje bieżący dzienny zestaw i
+porównuje go z ostatnim wcześniejszym dniem. Tabela nie jest dostępna bezpośrednio
+przez publiczne role, a wpisy starsze niż 400 dni są automatycznie usuwane.
+
 ## youtube_channels, youtube_videos i artist_videos
 
 `youtube_channels` przechowuje publiczne metadane kanału, typ wydawcy i stan
