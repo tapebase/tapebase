@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { UserListKind } from "@/lib/user-lists";
 import { ratingErrorMessage } from "@/lib/rating-errors";
 
-export type UserListActionState = { message?: string; success?: boolean; listId?: number; kind?: UserListKind };
+export type UserListActionState = { message?: string; success?: boolean; listId?: number; kind?: UserListKind; rating?: number | null };
 
 const maxPlaylistCoverSize = 190 * 1024;
 
@@ -185,8 +185,17 @@ export async function removeTrackFromUserList(listId: number, trackId: number) {
 export async function saveUserListRating(listId: number, _state: UserListActionState, formData: FormData): Promise<UserListActionState> {
   const auth = await authorizedClient();
   if (!auth) return { message: "Zaloguj się, aby ocenić playlistę." };
+  if (!validId(listId)) return { message: "Nieprawidłowa playlista." };
+  if (formData.get("intent") === "remove") {
+    const { error } = await auth.client.from("user_list_ratings").delete()
+      .eq("user_id", auth.userId).eq("list_id", listId);
+    if (error) return { message: "Nie udało się usunąć oceny playlisty." };
+    revalidatePath(`/lista/${listId}`);
+    revalidatePath("/");
+    return { success: true, message: "Ocena playlisty została usunięta.", rating: null };
+  }
   const rating = Number(formData.get("rating"));
-  if (!validId(listId) || !Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
+  if (!Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
     return { message: "Wybierz ocenę od 1 do 10." };
   }
   const { data: list, error: listError } = await auth.client.from("user_lists")
@@ -200,5 +209,5 @@ export async function saveUserListRating(listId: number, _state: UserListActionS
   if (error) return { message: ratingErrorMessage(error, "Nie udało się zapisać oceny playlisty.") };
   revalidatePath(`/lista/${listId}`);
   revalidatePath("/");
-  return { success: true, message: "Ocena playlisty została zapisana." };
+  return { success: true, message: "Ocena playlisty została zapisana.", rating };
 }

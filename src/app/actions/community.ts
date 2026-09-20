@@ -1,10 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ratingErrorMessage } from "@/lib/rating-errors";
 
-export type CommunityActionState = { message?: string; success?: boolean };
+export type CommunityActionState = { message?: string; success?: boolean; rating?: number | null };
 
 async function authorizedClient() {
   const client = await createClient();
@@ -17,6 +17,15 @@ async function authorizedClient() {
 
 function validAlbumId(value: number) {
   return Number.isSafeInteger(value) && value > 0;
+}
+
+function refreshRatings(...paths: string[]) {
+  updateTag("ratings");
+  paths.forEach(path => revalidatePath(path, "page"));
+  revalidatePath("/rankingi");
+  revalidatePath("/profil");
+  revalidatePath("/u/[username]", "page");
+  revalidatePath("/");
 }
 
 export type CommentTargetType = "album" | "artist";
@@ -41,8 +50,16 @@ export async function saveRating(
 ): Promise<CommunityActionState> {
   const auth = await authorizedClient();
   if (!auth) return { message: "Zaloguj się, aby ocenić album." };
+  if (!validAlbumId(albumId)) return { message: "Nieprawidłowy album." };
+  if (formData.get("intent") === "remove") {
+    const { error } = await auth.client.from("ratings").delete()
+      .eq("user_id", auth.userId).eq("album_id", albumId);
+    if (error) return { message: "Nie udało się usunąć oceny albumu." };
+    refreshRatings("/album/[slug]");
+    return { success: true, message: "Ocena albumu została usunięta.", rating: null };
+  }
   const rating = Number(formData.get("rating"));
-  if (!validAlbumId(albumId) || !Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
+  if (!Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
     return { message: "Wybierz ocenę od 1 do 10 co 0,5." };
   }
 
@@ -51,9 +68,8 @@ export async function saveRating(
     { onConflict: "user_id,album_id" },
   );
   if (error) return { message: ratingErrorMessage(error, "Nie udało się zapisać oceny.") };
-  revalidatePath("/album/[slug]", "page");
-  revalidatePath("/profil");
-  return { success: true, message: "Ocena zapisana." };
+  refreshRatings("/album/[slug]");
+  return { success: true, message: "Ocena zapisana.", rating };
 }
 
 export async function saveCoverRating(
@@ -63,8 +79,16 @@ export async function saveCoverRating(
 ): Promise<CommunityActionState> {
   const auth = await authorizedClient();
   if (!auth) return { message: "Zaloguj się, aby ocenić okładkę." };
+  if (!validAlbumId(albumId)) return { message: "Nieprawidłowy album." };
+  if (formData.get("intent") === "remove") {
+    const { error } = await auth.client.from("album_cover_ratings").delete()
+      .eq("user_id", auth.userId).eq("album_id", albumId);
+    if (error) return { message: "Nie udało się usunąć oceny okładki." };
+    refreshRatings("/album/[slug]");
+    return { success: true, message: "Ocena okładki została usunięta.", rating: null };
+  }
   const rating = Number(formData.get("rating"));
-  if (!validAlbumId(albumId) || !Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
+  if (!Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
     return { message: "Wybierz ocenę od 1 do 10 co 0,5." };
   }
 
@@ -73,9 +97,8 @@ export async function saveCoverRating(
     { onConflict: "user_id,album_id" },
   );
   if (error) return { message: ratingErrorMessage(error, "Nie udało się zapisać oceny okładki.") };
-  revalidatePath("/album/[slug]", "page");
-  revalidatePath("/rankingi");
-  return { success: true, message: "Ocena okładki zapisana." };
+  refreshRatings("/album/[slug]");
+  return { success: true, message: "Ocena okładki zapisana.", rating };
 }
 
 export async function saveArtistRating(
@@ -85,8 +108,16 @@ export async function saveArtistRating(
 ): Promise<CommunityActionState> {
   const auth = await authorizedClient();
   if (!auth) return { message: "Zaloguj się, aby ocenić artystę." };
+  if (!validAlbumId(artistId)) return { message: "Nieprawidłowy artysta." };
+  if (formData.get("intent") === "remove") {
+    const { error } = await auth.client.from("artist_ratings").delete()
+      .eq("user_id", auth.userId).eq("artist_id", artistId);
+    if (error) return { message: "Nie udało się usunąć oceny artysty." };
+    refreshRatings("/artist/[slug]");
+    return { success: true, message: "Ocena artysty została usunięta.", rating: null };
+  }
   const rating = Number(formData.get("rating"));
-  if (!validAlbumId(artistId) || !Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
+  if (!Number.isFinite(rating) || rating < 1 || rating > 10 || rating * 2 !== Math.floor(rating * 2)) {
     return { message: "Wybierz ocenę od 1 do 10 co 0,5." };
   }
 
@@ -95,9 +126,8 @@ export async function saveArtistRating(
     { onConflict: "user_id,artist_id" },
   );
   if (error) return { message: ratingErrorMessage(error, "Nie udało się zapisać oceny artysty.") };
-  revalidatePath("/artist/[slug]", "page");
-  revalidatePath("/profil");
-  return { success: true, message: "Ocena artysty zapisana." };
+  refreshRatings("/artist/[slug]");
+  return { success: true, message: "Ocena artysty zapisana.", rating };
 }
 
 async function setAlbumList(

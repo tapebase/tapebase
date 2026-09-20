@@ -13,7 +13,7 @@ import {
 import type { ViewerAlbumState } from "@/lib/community";
 import { saveUserListRating } from "@/app/actions/user-lists";
 
-const initialState = {};
+const initialState: { message?: string; success?: boolean; rating?: number | null } = {};
 
 function Feedback({ state }: { state: { message?: string; success?: boolean } }) {
   return state.message ? <p aria-live="polite" className={`mt-2 text-sm ${state.success ? "text-emerald-700" : "text-red-700"}`}>{state.message}</p> : null;
@@ -57,7 +57,7 @@ function RatingPanel({
 }) {
   const saveAction = entity === "album" ? saveRating : entity === "artist" ? saveArtistRating : entity === "cover" ? saveCoverRating : saveUserListRating;
   const [state, action, pending] = useActionState(saveAction.bind(null, targetId), initialState);
-  const [selected, setSelected] = useState(initialRating);
+  const selected = state.rating === undefined ? initialRating : state.rating;
   const [hovered, setHovered] = useState<number | null>(null);
   const shown = hovered ?? selected ?? 0;
 
@@ -97,11 +97,13 @@ function RatingPanel({
             onMouseEnter={() => setHovered(value)}
             onFocus={() => setHovered(value)}
             onBlur={() => setHovered(null)}
-            onClick={() => setSelected(value)}
           ><Star fill={fill} /></button>;
         })}
       </div>
-      {pending && <p aria-live="polite" className="mt-2 text-sm text-zinc-500">Zapisywanie oceny…</p>}
+      {selected !== null && <button type="submit" name="intent" value="remove" disabled={pending} className="mt-3 text-sm font-semibold text-zinc-500 underline decoration-zinc-300 underline-offset-4 hover:text-red-700 disabled:opacity-50">
+        Usuń ocenę
+      </button>}
+      {pending && <p aria-live="polite" className="mt-2 text-sm text-zinc-500">Zapisywanie zmiany…</p>}
       <Feedback state={state} />
     </form> : <div className="mt-5 border-t border-zinc-200 pt-4">
       {disabledMessage ? <p className="text-sm font-semibold text-zinc-500">{disabledMessage}</p>
