@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AlbumCard, Empty, Pagination } from "@/components/catalog";
 import { listAlbums, pageNumber, searchText, type SearchParams } from "@/lib/catalog";
 import { MUSIC_GENRES, isMusicGenre } from "@/lib/genres";
@@ -7,11 +8,20 @@ export default async function AlbumsPage({ searchParams }: { searchParams: Promi
   const params = await searchParams;
   const q = searchText(params.q), page = pageNumber(params.page);
   const genre = isMusicGenre(params.gatunek) ? params.gatunek : "";
+  const randomError = params.losowy === "blad";
   const albums = await listAlbums(q, page, undefined, genre);
   return <main className="mx-auto w-full max-w-7xl px-6 py-12">
     <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
-      <h1 className="text-4xl font-black">Albumy</h1>
-      <p className="mt-3 text-zinc-600">Albumy i EP w katalogu · {albums.count} {q || genre ? "wyników" : "wydawnictw"}</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black">Albumy</h1>
+          <p className="mt-3 text-zinc-600">Albumy i EP w katalogu · {albums.count} {q || genre ? "wyników" : "wydawnictw"}</p>
+        </div>
+        <Link href="/album/losowy" prefetch={false} className="rounded-2xl border border-zinc-300 bg-white px-5 py-3 font-bold transition hover:bg-zinc-100">
+          Losuj album
+        </Link>
+      </div>
+      {randomError && <p role="alert" className="mt-5 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">Nie udało się teraz wylosować albumu. Spróbuj ponownie.</p>}
       <form action="/album" className="my-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_14rem_auto]" role="search">
         <label><span className="sr-only">Szukaj po tytule albumu lub artyście</span><input type="search" name="q" defaultValue={q} placeholder="Szukaj po tytule albumu lub artyście…" maxLength={100} className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-5 py-4" /></label>
         <label><span className="sr-only">Gatunek</span><select name="gatunek" defaultValue={genre} className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-4">
