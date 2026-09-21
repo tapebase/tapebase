@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "Błąd potwierdzenia" };
+export const metadata = { title: "Błąd potwierdzenia", robots: { index: false, follow: false } };
 
 export default function AuthErrorPage() {
   return <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">

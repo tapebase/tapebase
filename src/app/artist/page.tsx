@@ -2,8 +2,13 @@ import Link from "next/link";
 import { ArtistCard, Empty, Pagination, SearchForm } from "@/components/catalog";
 import { listArtists, pageNumber, searchText, type SearchParams } from "@/lib/catalog";
 import { countryFilter } from "@/lib/countries";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Artyści" };
+export const metadata = publicPageMetadata(
+  "Artyści",
+  "Odkrywaj artystów w TAPEBASE, przeglądaj ich albumy, oceny, komentarze, utwory, teledyski i koncerty.",
+  "/artist",
+);
 export default async function ArtistsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const q = searchText(params.q), page = pageNumber(params.page), country = countryFilter(params.kraj);

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArtist, artistAlbums, allArtistTracks, pageNumber, type SearchParams } from "@/lib/catalog";
 import { AlbumCard, Artwork, Empty, Pagination } from "@/components/catalog";
-import { artistPath } from "@/lib/catalog-format";
+import { albumPath, artistPath } from "@/lib/catalog-format";
 import { getViewer } from "@/lib/auth";
 import { getArtistCommunity } from "@/lib/community";
 import { ArtistRatingPanel, RatingStars } from "@/components/community-controls";
@@ -15,6 +15,8 @@ import { getArtistVideos } from "@/lib/artist-videos";
 import { ArtistVideos } from "@/components/artist-videos";
 import { ArtistCommunitySection } from "@/components/artist-community";
 import { ArtistTrackList } from "@/components/artist-track-list";
+import { JsonLd } from "@/components/json-ld";
+import { absoluteUrl, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<SearchParams> };
 const birthDateFormat = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
@@ -43,9 +45,30 @@ function displayedBirthDate(value: string | null, precision: string | null) {
 }
 export async function generateMetadata({ params }: Props) {
   const artist = await getArtist((await params).slug);
+  if (!artist) return { title: "Artysta", robots: { index: false, follow: true } };
+  const path = artistPath(artist);
+  const description = artist.description?.slice(0, 155)
+    || `Profil artysty ${artist.name} w TAPEBASE: albumy, oceny, komentarze, utwory i teledyski.`;
   return {
-    title: artist?.name || "Artysta",
-    robots: artist?.catalog_visible ? undefined : { index: false, follow: true },
+    title: artist.name || "Artysta",
+    description,
+    alternates: artist.catalog_visible ? { canonical: path } : undefined,
+    openGraph: {
+      title: artist.name || "Artysta",
+      description,
+      url: path,
+      type: "profile" as const,
+      siteName: SITE_NAME,
+      locale: "pl_PL",
+      images: artist.image_url ? [{ url: artist.image_url, alt: `Zdjęcie artysty ${artist.name}` }] : [{ url: DEFAULT_SOCIAL_IMAGE, alt: "TAPEBASE – społecznościowa baza muzyki" }],
+    },
+    twitter: {
+      card: "summary_large_image" as const,
+      title: artist.name || "Artysta",
+      description,
+      images: artist.image_url ? [artist.image_url] : [DEFAULT_SOCIAL_IMAGE],
+    },
+    robots: artist.catalog_visible ? undefined : { index: false, follow: true },
   };
 }
 export default async function ArtistPage({ params, searchParams }: Props) {
@@ -77,6 +100,35 @@ export default async function ArtistPage({ params, searchParams }: Props) {
   const age = ageFromBirthDate(artist.birth_date, artist.birth_date_precision);
   const birthLocation = [artist.country_code ? countryLabel(artist.country_code) : null, artist.birth_place].filter(Boolean).join(" / ") || "—";
   return <main className="mx-auto max-w-7xl px-6 py-12">
+    {artist.catalog_visible && <JsonLd data={{
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "MusicGroup",
+          "@id": `${absoluteUrl(returnPath)}#artist`,
+          name: artist.name,
+          url: absoluteUrl(returnPath),
+          image: artist.image_url || undefined,
+          description: artist.description || undefined,
+          sameAs: artist.spotify_id ? [`https://open.spotify.com/artist/${artist.spotify_id}`] : undefined,
+          album: albums.rows.map(album => ({ "@type": "MusicAlbum", name: album.title, url: absoluteUrl(albumPath(album)) })),
+          aggregateRating: community.ratingCount > 0 && community.average !== null ? {
+            "@type": "AggregateRating",
+            ratingValue: Number(community.average.toFixed(1)),
+            bestRating: 10,
+            worstRating: 1,
+            ratingCount: community.ratingCount,
+          } : undefined,
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "Artyści", item: absoluteUrl("/artist") },
+            { "@type": "ListItem", position: 2, name: artist.name, item: absoluteUrl(returnPath) },
+          ],
+        },
+      ],
+    }} />}
     <Link href="/artist" className="mb-6 inline-block text-sm font-semibold hover:underline">← Wszyscy artyści</Link>
     <section className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <div className="flex flex-col gap-8 lg:flex-row">

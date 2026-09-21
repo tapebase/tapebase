@@ -1,6 +1,7 @@
 import { InfoPage } from "@/components/info-page";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Polityka prywatności" };
+export const metadata = publicPageMetadata("Polityka prywatności", "Zasady przetwarzania danych i korzystania z usług zewnętrznych w TAPEBASE.", "/polityka-prywatnosci");
 
 export default function PrivacyPage() {
   return <InfoPage eyebrow="Informacje" title="Polityka prywatności" intro="Opis danych używanych przez testową wersję TAPEBASE. Ostatnia aktualizacja: 17 września 2026 r.">

@@ -7,11 +7,13 @@ import { countryFilter } from "@/lib/countries";
 import { MUSIC_GENRES, genreLabel, isMusicGenre } from "@/lib/genres";
 import { UserAvatar } from "@/components/user-avatar";
 import { getRankedActiveUsers } from "@/lib/community-leaderboard";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Rankingi",
-  description: "Najlepiej oceniani artyści, albumy i okładki oraz najaktywniejsi użytkownicy TAPEBASE.",
-};
+export const metadata = publicPageMetadata(
+  "Rankingi muzyczne",
+  "Najlepiej oceniani artyści, albumy i okładki oraz najaktywniejsi użytkownicy TAPEBASE.",
+  "/rankingi",
+);
 
 function RatingSummary({ average, count }: { average: number; count: number }) {
   return <div className="shrink-0 text-right">

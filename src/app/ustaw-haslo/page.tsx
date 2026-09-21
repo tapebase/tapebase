@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getViewer } from "@/lib/auth";
 import { UpdatePasswordForm } from "./password-form";
 
-export const metadata = { title: "Ustaw nowe hasło" };
+export const metadata = { title: "Ustaw nowe hasło", robots: { index: false, follow: false } };
 
 export default async function UpdatePasswordPage() {
   const viewer = await getViewer();

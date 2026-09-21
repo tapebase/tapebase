@@ -10,13 +10,27 @@ import { SpotifyPlaylistExport } from "@/components/spotify-playlist-export";
 import { spotifyConnectionStatus } from "@/lib/spotify-user";
 import { PlaylistCoverEditor } from "@/components/playlist-cover-editor";
 import { PlaylistRatingPanel } from "@/components/community-controls";
+import { JsonLd } from "@/components/json-ld";
+import { absoluteUrl, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 
 type Props = { params: Promise<{ id: string }>; searchParams?: Promise<{ spotify?: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const id = Number((await params).id);
   const list = await getUserListById(id, false);
-  return { title: list?.name ?? "Lista" };
+  if (!list || !list.is_public) return { title: "Lista", robots: { index: false, follow: true } };
+  const path = `/lista/${list.id}`;
+  const owner = list.owner?.username ? ` użytkownika @${list.owner.username}` : "";
+  const description = list.description?.slice(0, 155)
+    || `${list.kind === "tracks" ? "Playlista" : "Lista albumów"}${owner} w TAPEBASE.`;
+  const image = list.cover_url || list.albumItems[0]?.album.cover_url || list.trackItems[0]?.track.album?.cover_url;
+  return {
+    title: list.name,
+    description,
+    alternates: { canonical: path },
+    openGraph: { title: list.name, description, url: path, type: "website" as const, siteName: SITE_NAME, locale: "pl_PL", images: image ? [{ url: image, alt: `Okładka listy ${list.name}` }] : [{ url: DEFAULT_SOCIAL_IMAGE, alt: "TAPEBASE – społecznościowa baza muzyki" }] },
+    twitter: { card: "summary_large_image" as const, title: list.name, description, images: image ? [image] : [DEFAULT_SOCIAL_IMAGE] },
+  };
 }
 
 export default async function UserListPage({ params, searchParams }: Props) {
@@ -34,8 +48,39 @@ export default async function UserListPage({ params, searchParams }: Props) {
   const rating = list.kind === "tracks" && list.is_public
     ? await getUserListRating(list.id, viewer?.id ?? null)
     : null;
+  const listPath = `/lista/${list.id}`;
 
   return <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-12">
+    {list.is_public && <JsonLd data={{
+      "@context": "https://schema.org",
+      "@type": list.kind === "tracks" ? "MusicPlaylist" : "ItemList",
+      "@id": `${absoluteUrl(listPath)}#list`,
+      name: list.name,
+      description: list.description || undefined,
+      url: absoluteUrl(listPath),
+      image: list.cover_url || undefined,
+      creator: list.owner ? { "@type": "Person", name: list.owner.username, url: absoluteUrl(`/u/${encodeURIComponent(list.owner.username)}`) } : undefined,
+      numTracks: list.kind === "tracks" ? list.trackItems.length : undefined,
+      track: list.kind === "tracks" ? list.trackItems.map(item => ({
+        "@type": "MusicRecording",
+        name: item.track.title,
+        url: item.track.spotify_id ? `https://open.spotify.com/track/${item.track.spotify_id}` : undefined,
+      })) : undefined,
+      numberOfItems: list.kind === "albums" ? list.albumItems.length : undefined,
+      itemListElement: list.kind === "albums" ? list.albumItems.map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.album.title,
+        url: absoluteUrl(albumPath(item.album)),
+      })) : undefined,
+      aggregateRating: rating && rating.ratingCount > 0 && rating.average !== null ? {
+        "@type": "AggregateRating",
+        ratingValue: Number(rating.average.toFixed(1)),
+        bestRating: 10,
+        worstRating: 1,
+        ratingCount: rating.ratingCount,
+      } : undefined,
+    }} />}
     <Link href={own ? "/listy" : `/u/${encodeURIComponent(list.owner?.username ?? "")}`} className="text-sm font-bold hover:underline">← {own ? "Twoje listy" : "Profil autora"}</Link>
     <header className="mt-5 rounded-3xl bg-white p-6 shadow-sm sm:p-8">
       <div className="grid gap-6 sm:grid-cols-[180px_1fr] sm:items-start">

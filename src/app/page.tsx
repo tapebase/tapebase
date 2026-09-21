@@ -8,6 +8,12 @@ import { ActiveUsers } from "@/components/active-users";
 import { RecentlyRatedAlbums } from "@/components/recently-rated-albums";
 import { getLatestPublicPlaylists } from "@/lib/user-lists";
 import { LatestPlaylists } from "@/components/latest-playlists";
+import { publicPageMetadata, SITE_DESCRIPTION } from "@/lib/seo";
+
+export const metadata = {
+  ...publicPageMetadata("TAPEBASE", SITE_DESCRIPTION, "/"),
+  title: { absolute: "TAPEBASE – oceniaj albumy i artystów" },
+};
 
 export default async function Home({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const q = searchText((await searchParams).q);

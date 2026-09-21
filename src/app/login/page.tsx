@@ -1,7 +1,7 @@
 import { safeNextPath } from "@/lib/auth-validation";
 import { SignInForm, SignUpForm } from "./auth-forms";
 
-export const metadata = { title: "Logowanie" };
+export const metadata = { title: "Logowanie", robots: { index: false, follow: false } };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; reset?: string; blocked?: string }> }) {
   const query = await searchParams;

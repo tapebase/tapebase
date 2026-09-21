@@ -14,7 +14,7 @@ import { ProfileConnections } from "@/components/profile-social";
 import { getOwnUserLists } from "@/lib/user-lists";
 import { UserListsSection } from "@/components/user-lists";
 
-export const metadata = { title: "Twój profil" };
+export const metadata = { title: "Twój profil", robots: { index: false, follow: false } };
 
 type RelatedAlbum = ProfileAlbum | ProfileAlbum[] | null;
 type WantedRow = { created_at: string; albums: RelatedAlbum };

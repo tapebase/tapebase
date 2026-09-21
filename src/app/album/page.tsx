@@ -2,8 +2,13 @@ import Link from "next/link";
 import { AlbumCard, Empty, Pagination } from "@/components/catalog";
 import { listAlbums, pageNumber, searchText, type SearchParams } from "@/lib/catalog";
 import { MUSIC_GENRES, isMusicGenre } from "@/lib/genres";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Albumy" };
+export const metadata = publicPageMetadata(
+  "Albumy",
+  "Przeglądaj, wyszukuj i oceniaj albumy oraz EP. Filtruj katalog TAPEBASE według gatunku i odkrywaj muzykę.",
+  "/album",
+);
 export default async function AlbumsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const params = await searchParams;
   const q = searchText(params.q), page = pageNumber(params.page);

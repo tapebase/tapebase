@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { FeedbackForm } from "./feedback-form";
 import { getViewer } from "@/lib/auth";
 
-export const metadata = { title: "Zgłoś błąd lub pomysł" };
+export const metadata = { title: "Zgłoś błąd lub pomysł", robots: { index: false, follow: false } };
 
 export default async function FeedbackPage({ searchParams }: { searchParams: Promise<{ from?: string }> }) {
   const viewer = await getViewer();

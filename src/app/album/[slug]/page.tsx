@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAlbum, getTracks } from "@/lib/catalog";
 import { Artwork, ArtistLinks, Empty, SpotifyLink } from "@/components/catalog";
-import { duration, orderedArtists, releaseDate } from "@/lib/catalog-format";
+import { albumPath, artistPath, duration, orderedArtists, releaseDate } from "@/lib/catalog-format";
 import { getViewer } from "@/lib/auth";
 import { getAlbumCommunity, getViewerAlbumState } from "@/lib/community";
 import { AlbumCommunitySection } from "@/components/album-community";
@@ -10,11 +10,26 @@ import { AlbumRatingPanel, CoverRatingPanel } from "@/components/community-contr
 import { genreLabel } from "@/lib/genres";
 import { getUserAlbumListChoices, getUserTrackListChoicesForTracks } from "@/lib/user-lists";
 import { AddAlbumToList, AddTrackToPlaylist } from "@/components/user-list-forms";
+import { JsonLd } from "@/components/json-ld";
+import { absoluteUrl, DEFAULT_SOCIAL_IMAGE, SITE_NAME } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props) {
   const album = await getAlbum((await params).slug);
-  return { title: album?.title || "Nie znaleziono albumu" };
+  if (!album) return { title: "Nie znaleziono albumu", robots: { index: false, follow: false } };
+  const artistNames = orderedArtists(album.credits, album.primary_artist).map(artist => artist.name).filter(Boolean).join(", ") || "nieznany wykonawca";
+  const description = `${album.album_type === "ep" ? "EP" : "Album"} „${album.title}” – ${artistNames}. Oceny użytkowników, recenzje, tracklista, data wydania i informacje o albumie.`;
+  const path = albumPath(album);
+  const images = album.cover_url
+    ? [{ url: album.cover_url, alt: `Okładka albumu ${album.title}` }]
+    : [{ url: DEFAULT_SOCIAL_IMAGE, alt: "TAPEBASE – społecznościowa baza muzyki" }];
+  return {
+    title: `${album.title} – ${artistNames}`,
+    description,
+    alternates: { canonical: path },
+    openGraph: { title: `${album.title} – ${artistNames}`, description, url: path, type: "website", siteName: SITE_NAME, locale: "pl_PL", images },
+    twitter: { card: "summary_large_image", title: `${album.title} – ${artistNames}`, description, images: album.cover_url ? [album.cover_url] : [DEFAULT_SOCIAL_IMAGE] },
+  };
 }
 export default async function AlbumPage({ params }: Props) {
   const slug = (await params).slug;
@@ -32,6 +47,51 @@ export default async function AlbumPage({ params }: Props) {
     : new Map();
   const discs = [...new Set(tracks.map(track => track.disc_number))];
   return <main className="mx-auto max-w-7xl px-6 py-12">
+    <JsonLd data={{
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "MusicAlbum",
+          "@id": `${absoluteUrl(albumPath(album))}#album`,
+          name: album.title,
+          url: absoluteUrl(albumPath(album)),
+          image: album.cover_url || undefined,
+          description: album.description || undefined,
+          datePublished: album.release_date_raw || album.release_date || undefined,
+          genre: genreLabel(album.genre),
+          numTracks: tracks.length,
+          byArtist: orderedArtists(album.credits, album.primary_artist).map(artist => ({
+            "@type": "MusicGroup",
+            name: artist.name,
+            url: absoluteUrl(artistPath(artist)),
+            sameAs: artist.spotify_id ? `https://open.spotify.com/artist/${artist.spotify_id}` : undefined,
+          })),
+          track: tracks.map(track => ({
+            "@type": "MusicRecording",
+            name: track.title,
+            position: track.track_number,
+            url: `${absoluteUrl(albumPath(album))}#track-${track.id}`,
+            sameAs: track.spotify_id ? `https://open.spotify.com/track/${track.spotify_id}` : undefined,
+          })),
+          aggregateRating: community.ratingCount > 0 ? {
+            "@type": "AggregateRating",
+            ratingValue: Number(community.average?.toFixed(1)),
+            ratingCount: community.ratingCount,
+            bestRating: 10,
+            worstRating: 1,
+          } : undefined,
+          sameAs: album.spotify_id ? `https://open.spotify.com/album/${album.spotify_id}` : undefined,
+        },
+        {
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            { "@type": "ListItem", position: 1, name: "TAPEBASE", item: absoluteUrl("/") },
+            { "@type": "ListItem", position: 2, name: "Albumy", item: absoluteUrl("/album") },
+            { "@type": "ListItem", position: 3, name: album.title, item: absoluteUrl(albumPath(album)) },
+          ],
+        },
+      ],
+    }} />
     <Link href="/album" className="mb-6 inline-block text-sm font-semibold hover:underline">← Wszystkie albumy</Link>
     <section className="grid gap-8 lg:grid-cols-[320px_1fr]">
       <aside className="min-w-0">

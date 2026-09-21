@@ -6,7 +6,7 @@ import { UserListCards } from "@/components/user-lists";
 import { spotifyConnectionStatus } from "@/lib/spotify-user";
 import { disconnectUserSpotify } from "@/app/actions/spotify-playlists";
 
-export const metadata = { title: "Twoje listy i playlisty" };
+export const metadata = { title: "Twoje listy i playlisty", robots: { index: false, follow: false } };
 
 export default async function UserListsPage() {
   const viewer = await getViewer();

@@ -5,7 +5,7 @@ import { getViewer } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { genreLabel } from "@/lib/genres";
 
-export const metadata = { title: "Zgłoś album lub artystę" };
+export const metadata = { title: "Zgłoś album lub artystę", robots: { index: false, follow: false } };
 
 type ImportJob = { status: string; albums_total: number; albums_completed: number; error_message: string | null; retry_at: string | null };
 type Submission = {

@@ -1,5 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { getViewer } from "@/lib/auth";
+import { privatePageMetadata } from "@/lib/seo";
+
+export const metadata = privatePageMetadata("Administracja");
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const viewer = await getViewer();

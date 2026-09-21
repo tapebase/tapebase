@@ -1,6 +1,7 @@
 import { InfoPage } from "@/components/info-page";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Regulamin" };
+export const metadata = publicPageMetadata("Regulamin", "Zasady korzystania z TAPEBASE, publikowania ocen, komentarzy i zgłoszeń katalogowych.", "/regulamin");
 
 export default function TermsPage() {
   return <InfoPage eyebrow="Informacje" title="Regulamin" intro="Podstawowe zasady korzystania z testowej wersji TAPEBASE. Ostatnia aktualizacja: 11 września 2026 r.">

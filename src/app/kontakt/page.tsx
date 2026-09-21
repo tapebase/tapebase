@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { InfoPage } from "@/components/info-page";
+import { publicPageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Kontakt" };
+export const metadata = publicPageMetadata("Kontakt", "Skontaktuj się z TAPEBASE, zgłoś błąd, pomysł albo brakujący album lub profil artysty.", "/kontakt");
 
 export default function ContactPage() {
   return <InfoPage title="Kontakt" intro="Uwagi użytkowników pomagają nam poprawiać katalog i przygotować TAPEBASE do szerszych testów.">

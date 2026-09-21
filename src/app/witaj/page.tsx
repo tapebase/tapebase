@@ -4,7 +4,7 @@ import { getViewer } from "@/lib/auth";
 import { safeNextPath } from "@/lib/auth-validation";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Witaj w TAPEBASE" };
+export const metadata = { title: "Witaj w TAPEBASE", robots: { index: false, follow: false } };
 
 export default async function WelcomePage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const viewer = await getViewer();

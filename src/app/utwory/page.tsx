@@ -8,7 +8,7 @@ import { Artwork, Empty, Pagination, SearchForm } from "@/components/catalog";
 import { albumPath } from "@/lib/catalog-format";
 import { AddTrackToSelectedPlaylist } from "@/components/user-list-forms";
 
-export const metadata = { title: "Dodaj utwory do playlisty" };
+export const metadata = { title: "Dodaj utwory do playlisty", robots: { index: false, follow: false } };
 
 export default async function PlaylistTracksPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const viewer = await getViewer();

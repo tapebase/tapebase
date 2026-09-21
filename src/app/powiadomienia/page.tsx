@@ -4,7 +4,7 @@ import { NotificationsReadReceipt } from "@/components/notifications-read-receip
 import { getViewer } from "@/lib/auth";
 import { getNotifications } from "@/lib/notifications";
 
-export const metadata = { title: "Powiadomienia" };
+export const metadata = { title: "Powiadomienia", robots: { index: false, follow: false } };
 
 export default async function NotificationsPage() {
   const viewer = await getViewer();

@@ -1,4 +1,4 @@
-export const metadata = { title: "O projekcie" };
+export const metadata = { title: "O projekcie", robots: { index: false, follow: true } };
 
 export default function AboutPage() {
   return <main className="mx-auto flex w-full max-w-4xl flex-1 items-center justify-center px-6 py-20">
